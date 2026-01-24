@@ -2,41 +2,37 @@
 
 > The vocabulary, mental models, and invariants that underpin every distributed system design decision.
 
-**Prerequisites:** None  
-**Builds toward:** All other modules  
-**Estimated study time:** 3–4 hours  
-**Review frequency:** Weekly during active preparation
-
 ---
 
 ## Document Navigation
 
-| Section | Focus | Interview Relevance |
-|---------|-------|---------------------|
-| [1. The Four Pillars](#1-the-four-pillars-of-distributed-systems) | Core properties we optimize for | Foundation for every design discussion |
-| [2. Scalability](#2-scalability) | Growing system capacity | "How would you handle 10x traffic?" |
-| [3. Availability](#3-availability) | Uptime and accessibility | "What's your SLA strategy?" |
-| [4. Reliability](#4-reliability) | Correctness under failure | "How do you prevent data loss?" |
-| [5. Efficiency](#5-efficiency-latency--throughput) | Performance optimization | "How do you reduce latency?" |
-| [6. CAP Theorem](#6-cap-theorem) | Fundamental distributed trade-off | "Explain CAP and its implications" |
-| [7. PACELC Theorem](#7-pacelc-theorem) | Extended consistency trade-offs | "What about when there's no partition?" |
-| [8. Functional vs Non-Functional](#8-functional-vs-non-functional-requirements) | Requirements classification | "What are your constraints?" |
-| [9. Back-of-Envelope Estimation](#9-back-of-envelope-estimation) | Quantitative reasoning | "Estimate the storage needs" |
-| [10. Serviceability](#10-serviceability-and-manageability) | Operational concerns | "How do you debug in production?" |
+| Section | Focus |
+|---------|-------|
+| [1. The Five Axes](#1-the-five-axes-of-distributed-systems) | Core properties we optimize for |
+| [2. Scalability](#2-scalability) | Growing system capacity |
+| [3. Availability](#3-availability) | Uptime and accessibility |
+| [4. Reliability](#4-reliability) | Correctness under failure |
+| [5. Efficiency](#5-efficiency-latency--throughput) | Performance optimization |
+| [6. Consistency](#6-consistency-the-binding-constraint) | Data agreement across nodes |
+| [7. CAP & PACELC](#7-cap--pacelc) | Fundamental distributed trade-offs |
+| [8. Functional vs Non-Functional](#8-functional-vs-non-functional-requirements) | Requirements classification |
+| [9. Back-of-Envelope Estimation](#9-back-of-envelope-estimation) | Quantitative reasoning |
+| [10. Serviceability](#10-serviceability-and-manageability) | Operational concerns |
 
 ---
 
-## 1. The Four Pillars of Distributed Systems
+## 1. The Five Axes of Distributed Systems
 
-Every distributed system design is fundamentally a negotiation among four core properties. Understanding their interdependencies is essential for articulating trade-offs in interviews.
+Every distributed system design is fundamentally a negotiation among five core properties. Four represent capacities to optimize; the fifth—Consistency—acts as a binding constraint that modulates trade-offs among the others.
 
 ```mermaid
 graph TB
-    subgraph "The Four Pillars"
+    subgraph "The Five Axes"
         S[Scalability<br/>Can we grow?]
         A[Availability<br/>Is it up?]
         R[Reliability<br/>Is it correct?]
         E[Efficiency<br/>Is it fast?]
+        C[Consistency<br/>Do nodes agree?]
     end
     
     S <-->|"Horizontal scaling<br/>impacts coordination"| A
@@ -44,19 +40,27 @@ graph TB
     R <-->|"Validation adds<br/>latency"| E
     E <-->|"Caching complicates<br/>consistency"| S
     
-    C[Consistency<br/>The hidden fifth pillar]
-    
-    S -.->|"Partitioning<br/>fragments state"| C
-    A -.->|"CAP theorem<br/>forces choice"| C
-    R -.->|"Replication<br/>causes lag"| C
-    E -.->|"Strong consistency<br/>adds latency"| C
+    S ---|"Partitioning<br/>fragments state"| C
+    A ---|"CAP theorem<br/>forces choice"| C
+    R ---|"Replication<br/>causes lag"| C
+    E ---|"Strong consistency<br/>adds latency"| C
     
     style C fill:#fff3e0,stroke:#ff9800
 ```
 
-### The Core Insight
+### The Binding Constraint Model
 
-**System Invariant:** You cannot maximize all properties simultaneously. Every design decision trades one property for another.
+Consistency is not a fifth "pillar" to maximize alongside the others. It is the binding constraint that determines *how* the other four properties can be achieved. Choosing a consistency model (strong, eventual, causal) immediately constrains your design space:
+
+| Consistency Model | Scalability Impact | Availability Impact | Efficiency Impact | Reliability Impact |
+|-------------------|-------------------|---------------------|-------------------|-------------------|
+| Strong (linearizable) | Limits horizontal scale | Reduces during partitions | Adds coordination latency | Guarantees read-after-write |
+| Eventual | Enables massive scale | Maximizes availability | Minimizes coordination | Requires conflict resolution |
+| Causal | Moderate scale | Moderate availability | Moderate latency | Preserves causal ordering |
+
+### Trade-off Invariant
+
+**System Invariant:** You cannot maximize all properties simultaneously. Every design decision trades one property for another. The consistency model you choose determines which trade-offs are available.
 
 | If You Optimize For... | You Often Sacrifice... | Example |
 |------------------------|------------------------|---------|
@@ -65,9 +69,7 @@ graph TB
 | Low latency | Durability (sync writes) | Redis with async persistence |
 | High throughput | Per-request latency (batching) | Kafka batching messages |
 
-### Mental Model: The System Design Compass
-
-Before diving into any design, orient yourself:
+### The System Design Compass
 
 ```
                      CONSISTENCY
@@ -79,7 +81,7 @@ Before diving into any design, orient yourself:
                      SCALABILITY
 ```
 
-**Interview Pattern:** When asked to design a system, first establish which direction on this compass the requirements pull you.
+Consistency sits at the center because adjusting it shifts the feasible region for all other properties.
 
 ---
 
@@ -119,12 +121,12 @@ graph TD
     V3 -.->|"Hit ceiling?<br/>Must go horizontal"| LB
 ```
 
-### Detailed Comparison
+### Comparison
 
 | Dimension | Vertical Scaling | Horizontal Scaling |
 |-----------|------------------|-------------------|
 | **Mechanism** | Add CPU, RAM, storage to existing machine | Add more machines to the pool |
-| **Upper Bound** | Hardware ceiling (~256 cores, ~12TB RAM as of 2024) | Theoretically unlimited |
+| **Upper Bound** | Hardware ceiling (~256 cores, ~12TB RAM) | Theoretically unlimited |
 | **Failure Mode** | Single point of failure | Partial degradation |
 | **State Management** | Trivial (single machine) | Complex (distributed state) |
 | **Cost Curve** | Exponential (premium hardware) | Linear (commodity hardware) |
@@ -177,33 +179,13 @@ flowchart TD
 | **Cache** | More RAM | Distributed cache (Redis Cluster) |
 | **File storage** | Bigger disk | Distributed storage (S3, HDFS) |
 
-### Interview Prompt & Strong Answer
-
-> **Q: "When would you choose vertical over horizontal scaling?"**
-
-**Framework Answer:**
-
-"I'd choose **vertical scaling** when:
-1. **Speed matters** — it's faster to upgrade than redesign
-2. **State is complex** — e.g., relational database with many JOINs
-3. **Workload is predictable** — we know the ceiling we need
-4. **Cost isn't exponential yet** — commodity sizes are sufficient
-
-I'd choose **horizontal scaling** when:
-1. **Fault tolerance is required** — no single point of failure
-2. **Growth is unbounded** — we can't predict the ceiling
-3. **Workload is parallelizable** — stateless, independent requests
-4. **Cost efficiency at scale** — commodity hardware is cheaper
-
-**The key insight:** Vertical scaling is simpler but has a ceiling. Most production systems eventually need horizontal scaling, which requires designing for distribution from the start—stateless services, externalized state, and partitioning strategies."
-
 ---
 
 ## 3. Availability
 
 ### Definition
 
-Availability is the proportion of time a system is operational and accessible when needed. It's measured as a percentage of uptime over a given period.
+Availability is the proportion of time a system is operational and accessible when needed.
 
 ```
                     Uptime
@@ -363,7 +345,7 @@ flowchart LR
     S1 & S2 & S3 & S4 --> R1 & R2 & R3 & R4
 ```
 
-### Reliability Techniques Deep Dive
+### Reliability Techniques
 
 | Technique | What It Does | When to Use | Trade-off |
 |-----------|--------------|-------------|-----------|
@@ -439,7 +421,9 @@ graph LR
     L2 -.->|"Enables"| L1
 ```
 
-### Latency Numbers Every Engineer Should Know
+### Latency Reference Table
+
+> **Note:** These values are order-of-magnitude reference points, not guarantees. Actual latencies vary significantly based on hardware generation, configuration, workload characteristics, and environmental factors. Use for relative comparison and estimation, not as precise specifications.
 
 | Operation | Latency | Comparison |
 |-----------|---------|------------|
@@ -458,7 +442,7 @@ graph LR
 | Read 1MB sequentially from HDD | 20 ms | 40,000,000× L1 |
 | Send packet CA→Netherlands→CA | 150 ms | 300,000,000× L1 |
 
-### Latency Hierarchy Visualization
+### Latency Hierarchy
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -484,8 +468,6 @@ graph LR
 
 ### Percentile Latencies
 
-**Why Percentiles Matter:**
-
 | Metric | What It Tells You | Typical Use |
 |--------|-------------------|-------------|
 | **p50 (median)** | Typical user experience | General performance |
@@ -506,49 +488,72 @@ graph LR
 
 ---
 
-## 6. CAP Theorem
+## 6. Consistency (The Binding Constraint)
 
-### The Theorem
+### Definition
 
-In a distributed data system, when a **network partition** occurs, you must choose between:
+Consistency in distributed systems refers to the agreement of data values across multiple nodes at any given time. It determines what guarantees clients receive about the data they read relative to writes.
 
-| Property | Definition | Practical Meaning |
-|----------|------------|-------------------|
-| **Consistency (C)** | All nodes see the same data at the same time | Every read returns the most recent write |
-| **Availability (A)** | Every request receives a response | System responds even if some nodes are down |
-| **Partition Tolerance (P)** | System continues despite network failures | Handles network splits between nodes |
+### Consistency Spectrum
 
-### The Real Trade-off
+Consistency is not binary. Systems choose a point on a spectrum based on their requirements:
 
-**System Invariant:** Network partitions are inevitable in distributed systems. The real question is: *during a partition, do you sacrifice consistency or availability?*
+| Model | Guarantee | Latency Cost | Use Case |
+|-------|-----------|--------------|----------|
+| **Linearizability** | Reads always return most recent write; global ordering | Highest | Distributed locks, leader election |
+| **Sequential** | All operations appear in some sequential order | High | Replicated state machines |
+| **Causal** | Causally related operations appear in order | Moderate | Collaborative editing, social feeds |
+| **Eventual** | Replicas converge eventually; no ordering guarantee | Lowest | DNS, CDN caches, shopping carts |
+
+### Why Consistency Is the Binding Constraint
+
+Every consistency model choice constrains other architectural decisions:
 
 ```mermaid
 graph TD
-    subgraph "CAP Triangle"
-        C[Consistency<br/>Same data everywhere]
-        A[Availability<br/>Always respond]
-        P[Partition Tolerance<br/>Handle network splits]
-    end
+    C[Consistency Model Choice] --> S[Scalability Constraints]
+    C --> A[Availability Constraints]
+    C --> E[Efficiency Constraints]
+    C --> R[Reliability Constraints]
     
-    C --- A
-    A --- P
-    P --- C
+    S --> S1["Strong: Cross-node coordination limits horizontal scale"]
+    S --> S2["Eventual: Scale independently, reconcile later"]
     
-    CP[CP Systems<br/>Consistent but may<br/>be unavailable]
-    AP[AP Systems<br/>Available but may<br/>return stale data]
-    CA[CA Systems<br/>Single node only<br/>Not distributed]
+    A --> A1["Strong: Must reject requests during partitions"]
+    A --> A2["Eventual: Can serve from any replica"]
     
-    CP -.-> C
-    CP -.-> P
-    AP -.-> A
-    AP -.-> P
-    CA -.-> C
-    CA -.-> A
+    E --> E1["Strong: Coordination round-trips add latency"]
+    E --> E2["Eventual: Serve from local replica immediately"]
     
-    style CA fill:#ffcdd2,stroke:#c62828
+    R --> R1["Strong: Guaranteed read-after-write"]
+    R --> R2["Eventual: Clients may see stale data"]
 ```
 
-### CAP in Practice: A Scenario
+### Consistency Model Selection
+
+| Requirement | Recommended Model | Rationale |
+|-------------|-------------------|-----------|
+| Financial transactions | Linearizable | Cannot tolerate phantom reads or lost updates |
+| Inventory with reservations | Sequential or linearizable | Prevents overselling |
+| User profile updates | Causal | User sees own writes; others eventually converge |
+| Social media feed | Eventual | Staleness acceptable; availability critical |
+| Session data | Eventual with sticky sessions | User sees own state; others don't need to |
+
+---
+
+## 7. CAP & PACELC
+
+### CAP Theorem
+
+In a distributed data system, when a **network partition** occurs, you must choose between:
+
+| Property | Definition |
+|----------|------------|
+| **Consistency (C)** | All nodes see the same data at the same time |
+| **Availability (A)** | Every request receives a response |
+| **Partition Tolerance (P)** | System continues despite network failures |
+
+**System Invariant:** Network partitions are inevitable in distributed systems. The real question is: *during a partition, do you sacrifice consistency or availability?*
 
 ```mermaid
 sequenceDiagram
@@ -562,70 +567,25 @@ sequenceDiagram
     Node2-->>Node1: Ack
     Node1-->>Client: Success
     
-    Note over Node1,Node2: Network Partition Occurs!
+    Note over Node1,Node2: Network Partition Occurs
     
     Client->>Node2: Read X
     
     rect rgb(255, 235, 238)
         Note over Node2: CP System Choice
-        Node2-->>Client: Error: Cannot verify<br/>consistency
+        Node2-->>Client: Error: Cannot verify consistency
     end
     
     rect rgb(232, 245, 233)
         Note over Node2: AP System Choice
-        Node2-->>Client: X = 5<br/>(possibly stale)
+        Node2-->>Client: X = 5 (possibly stale)
     end
 ```
 
-### CP vs AP Systems
+### PACELC Extension
 
-| Aspect | CP Systems | AP Systems |
-|--------|------------|------------|
-| **During partition** | Reject requests | Accept requests |
-| **Guarantee** | Data is always correct | System is always available |
-| **Trade-off** | May be unavailable | May return stale data |
-| **Recovery** | Resume when partition heals | Reconcile conflicts |
-| **Examples** | HBase, MongoDB (default), Spanner, etcd | Cassandra, DynamoDB, CouchDB, Riak |
-| **Use cases** | Banking, inventory, reservations | Social feeds, shopping carts, caches |
+CAP only addresses behavior during partitions. PACELC extends the model:
 
-### CAP Decision Framework
-
-```mermaid
-flowchart TD
-    START[System Design] --> Q1{Can users see<br/>stale data?}
-    
-    Q1 -->|"Never - correctness is critical"| CP[Choose CP]
-    Q1 -->|"Briefly - UX matters more"| Q2{How long<br/>is acceptable?}
-    
-    Q2 -->|"Seconds to minutes"| AP[Choose AP]
-    Q2 -->|"Sub-second only"| Q3{Global<br/>deployment?}
-    
-    Q3 -->|"Yes - multi-region"| AP
-    Q3 -->|"No - single region"| CP
-    
-    CP --> CP_EX["Examples:<br/>• Financial transactions<br/>• Inventory management<br/>• Booking systems"]
-    
-    AP --> AP_EX["Examples:<br/>• Social media feeds<br/>• Product catalogs<br/>• User sessions"]
-```
-
-### Common CAP Misconceptions
-
-| Misconception | Reality |
-|---------------|---------|
-| "Pick two of three" | P is mandatory; you choose between C and A during partitions |
-| "It's binary" | Spectrum of consistency levels exists |
-| "Applies all the time" | Trade-off only matters during partitions |
-| "CA is viable" | Not for distributed systems (single node = not distributed) |
-
----
-
-## 7. PACELC Theorem
-
-### Beyond CAP
-
-CAP only addresses behavior during partitions. What about normal operation?
-
-**PACELC states:**
 ```
 if (Partition) {
     Choose: Availability OR Consistency
@@ -634,38 +594,20 @@ if (Partition) {
 }
 ```
 
-### The Complete Picture
+### Unified Classification Table
 
-```mermaid
-graph TD
-    subgraph "PACELC Framework"
-        P{Network<br/>Partition?}
-        
-        P -->|Yes| PAC[Choose: A or C]
-        P -->|No| ELC[Choose: L or C]
-        
-        PAC --> PA[Favor Availability<br/>Accept inconsistency]
-        PAC --> PC[Favor Consistency<br/>Reject requests]
-        
-        ELC --> EL[Favor Latency<br/>Async replication]
-        ELC --> EC[Favor Consistency<br/>Sync replication]
-    end
-```
-
-### System Classifications
-
-| System | During Partition (P) | Else (E) | Classification | Use Case |
-|--------|---------------------|----------|----------------|----------|
-| **Cassandra** | Availability | Latency | PA/EL | High-throughput, global |
-| **DynamoDB** | Availability | Latency | PA/EL | Serverless, scale-out |
+| System | During Partition | Normal Operation | Classification | Typical Use Case |
+|--------|------------------|------------------|----------------|------------------|
+| **Cassandra** | Availability | Latency | PA/EL | High-throughput, global distribution |
+| **DynamoDB** | Availability | Latency | PA/EL | Serverless, scale-out workloads |
 | **Riak** | Availability | Latency | PA/EL | Distributed caching |
-| **HBase** | Consistency | Consistency | PC/EC | Financial, analytics |
+| **HBase** | Consistency | Consistency | PC/EC | Financial data, analytics |
 | **Spanner** | Consistency | Consistency | PC/EC | Global transactions |
 | **etcd** | Consistency | Consistency | PC/EC | Configuration, coordination |
 | **MongoDB** | Availability | Consistency | PA/EC | General purpose |
-| **PNUTS** | Consistency | Latency | PC/EL | Yahoo's user data |
+| **PNUTS** | Consistency | Latency | PC/EL | User data stores |
 
-### PACELC Decision Matrix
+### Decision Framework
 
 ```mermaid
 flowchart TD
@@ -689,20 +631,27 @@ flowchart TD
     style PCEC fill:#e1f5fe
 ```
 
+### Common Misconceptions
+
+| Misconception | Reality |
+|---------------|---------|
+| "Pick two of three" | P is mandatory; you choose between C and A during partitions |
+| "It's binary" | Spectrum of consistency levels exists |
+| "Applies all the time" | Trade-off only matters during partitions |
+| "CA is viable" | Not for distributed systems (single node = not distributed) |
+
 ---
 
 ## 8. Functional vs Non-Functional Requirements
 
 ### Definitions
 
-| Type | Question | Examples | Where Discussed |
-|------|----------|----------|-----------------|
-| **Functional** | "What should the system do?" | Post messages, process payments, search products | Feature discussions |
-| **Non-Functional** | "How should the system behave?" | 99.9% uptime, <100ms latency, 10K req/s | Architecture discussions |
+| Type | Question | Examples |
+|------|----------|----------|
+| **Functional** | "What should the system do?" | Post messages, process payments, search products |
+| **Non-Functional** | "How should the system behave?" | 99.9% uptime, <100ms latency, 10K req/s |
 
-### The Five Essential Non-Functional Questions
-
-Before any system design, establish:
+### The Five Essential Non-Functional Dimensions
 
 ```mermaid
 graph TD
@@ -730,39 +679,9 @@ graph TD
 | Large data (>1TB) | Sharding, partitioning | Database, storage |
 | High write volume | Async processing, batching | Queue, database |
 
-### Interview Framework: Requirements Gathering
-
-```
-1. FUNCTIONAL: "The system should..."
-   ├── Core features (MVP)
-   ├── User workflows
-   └── Data entities and relationships
-
-2. NON-FUNCTIONAL: "The system must..."
-   ├── Scale: _____ users, _____ req/s, _____ data
-   ├── Latency: _____ ms p99
-   ├── Availability: _____ % uptime
-   ├── Consistency: Strong / Eventual / Causal
-   └── Durability: Zero loss / Best effort
-
-3. CONSTRAINTS: "We cannot..."
-   ├── Budget limitations
-   ├── Technology restrictions
-   ├── Timeline constraints
-   └── Team expertise gaps
-```
-
 ---
 
 ## 9. Back-of-Envelope Estimation
-
-### Why It Matters
-
-Estimation demonstrates you can:
-1. **Reason about scale** — understanding orders of magnitude
-2. **Identify bottlenecks** — finding the limiting factor
-3. **Make informed decisions** — choosing appropriate technologies
-4. **Communicate effectively** — grounding discussions in numbers
 
 ### Core Reference Numbers
 
@@ -882,11 +801,11 @@ BANDWIDTH:
 - Writes: 2.3K QPS × 200KB = 460 MB/s = 3.7 Gbps
 ```
 
-### Estimation Quick Reference Card
+### Quick Reference
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    ESTIMATION CHEAT SHEET                                │
+│                    ESTIMATION REFERENCE                                  │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  SCALE ANCHORS:                                                         │
@@ -919,7 +838,7 @@ BANDWIDTH:
 
 ### Definition
 
-How easy is it to operate, maintain, diagnose, and update the system? Often overlooked in design, but critical in production.
+How easy is it to operate, maintain, diagnose, and update the system?
 
 ### Key Dimensions
 
@@ -959,48 +878,16 @@ graph TD
 
 ---
 
-## Chapter Summary
+## Chapter Invariant
 
-### Concept Quick Reference
-
-| Concept | One-Line Definition | Key Trade-off |
-|---------|---------------------|---------------|
-| **Scalability** | Handle growth by adding resources | Vertical (simple) vs Horizontal (unlimited) |
-| **Availability** | Percentage of time system is accessible | Cost vs uptime guarantees |
-| **Reliability** | Probability of correct operation | Validation overhead vs correctness |
-| **Efficiency** | Resource utilization for performance | Latency vs throughput |
-| **CAP Theorem** | During partition, choose C or A | Consistency vs availability |
-| **PACELC** | Without partition, choose L or C | Latency vs consistency |
-
-### Interview Checklist
-
-Before your interview, ensure you can:
-
-- [ ] Explain vertical vs horizontal scaling with concrete trade-offs
-- [ ] Calculate availability from component reliabilities
-- [ ] Distinguish reliability from availability with examples
-- [ ] Recall latency numbers (cache, memory, disk, network)
-- [ ] Explain CAP theorem and identify CP vs AP systems
-- [ ] Apply PACELC to real database choices
-- [ ] Perform back-of-envelope calculations (QPS, storage, bandwidth)
-- [ ] Articulate non-functional requirements for any system
-
-### Key Interview Phrases
-
-```
-"The trade-off here is..."
-"This optimizes for X at the cost of Y..."
-"Given the requirement for X, we should choose Y because..."
-"If the constraint changes to X, we'd revisit this decision..."
-"At this scale, the bottleneck becomes..."
-```
+**Distributed systems design is the disciplined management of trade-offs among scalability, availability, reliability, and efficiency—all constrained by the consistency model chosen. There is no optimal point; there is only the appropriate point for the requirements at hand.**
 
 ---
 
 ## Connections to Other Modules
 
-| Module | Connection to Foundational Concepts |
-|--------|-------------------------------------|
+| Module | Connection |
+|--------|------------|
 | [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md) | Isolation levels, distributed transactions |
 | [03 — Data Storage](./03_DATA_STORAGE_AND_ACCESS.md) | Storage engines, indexing, data modeling |
 | [04 — Caching](./04_CACHING_AND_CONTENT_DELIVERY.md) | Latency optimization, consistency trade-offs |
@@ -1014,15 +901,6 @@ Before your interview, ensure you can:
 
 ## Navigation
 
-**Next:** [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Quick Reference:** [09 — Quick Reference](./09_QUICK_REFERENCE.md)
+**Next:** [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)  
+**Quick Reference:** [09 — Quick Reference](./09_QUICK_REFERENCE.md)  
 **Index:** [README](./README.md)
-
----
-
-## Revision History
-
-| Date | Version | Changes |
-|------|---------|---------|
-| 2025-01 | 1.0 | Initial creation |
-| 2025-01 | 2.0 | Comprehensive expansion with enhanced diagrams, interview patterns, and estimation deep-dive |
