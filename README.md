@@ -162,7 +162,9 @@ graph TB
 | Document | Core Topic | Key Trade-Off | Primary Question |
 |----------|-----------|---------------|------------------|
 | [DATABASE_SELECTION](./03_DATA_STORAGE_AND_ACCESS.md) | SQL vs. NoSQL decision framework | Structure vs. Flexibility | "Do I know my data schema upfront?" |
-| [DATA_MANAGEMENT](./03_DATA_STORAGE_AND_ACCESS.md) | Indexing, normalization, sharding | Storage vs. Query speed | "How do I organize data for my access patterns?" |
+| [DATA_MANAGEMENT](./DATA_MANAGEMENT.md) | Storage model, indexing, partitioning overview | Storage vs. Query speed | "What are my fundamental data decisions?" |
+| [STORAGE_ENGINES](./STORAGE_ENGINES.md) | B-Tree vs LSM-Tree, WAL, compaction | Read vs. Write optimization | "How should data be physically stored?" |
+| [SHARDING_PARTITIONING](./SHARDING_PARTITIONING.md) | Horizontal partitioning strategies, rebalancing | Scale vs. Complexity | "How do I distribute data across nodes?" |
 | [REPLICATION_PATTERNS](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Leader-follower, multi-leader, leaderless | Consistency vs. Availability | "How should data flow between nodes?" |
 | [CACHING_STRATEGIES](./04_CACHING_AND_CONTENT_DELIVERY.md) | Cache-aside, write-through, write-behind | Freshness vs. Speed | "How stale can my cached data be?" |
 | [CACHING_AND_CDN](./04_CACHING_AND_CONTENT_DELIVERY.md) | CDN architecture, edge caching | Latency vs. Consistency | "Where should I cache content?" |
@@ -186,7 +188,11 @@ graph TB
 |----------|-----------|---------------|------------------|
 | [LOAD_BALANCING_AND_SCALING](./07_SCALING_AND_INFRASTRUCTURE.md) | LB algorithms, horizontal/vertical scaling | Complexity vs. Capacity | "How do I distribute load?" |
 | [TRAFFIC_MANAGEMENT](./07_SCALING_AND_INFRASTRUCTURE.md) | Rate limiting, circuit breakers, backpressure | Fairness vs. Throughput | "How do I protect my system from overload?" |
-| [DISTRIBUTED_SYSTEM_PATTERNS](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Consistent hashing, leader election, quorums | Various | "What patterns solve distributed coordination?" |
+| [DISTRIBUTED_SYSTEM_PATTERNS](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Leader election, quorums, coordination | Various | "What patterns solve distributed coordination?" |
+| [CONSISTENT_HASHING](./CONSISTENT_HASHING_DEEP_DIVE.md) | Ring hashing, jump hash, virtual nodes | Scale vs. Disruption | "How do I minimize data movement when scaling?" |
+| [DYNAMO_ARCHITECTURE](./DYNAMO_ARCHITECTURE.md) | Vector clocks, sloppy quorums, gossip | Availability vs. Consistency | "How do AP systems achieve high availability?" |
+| [CONSENSUS_PROTOCOLS](./CONSENSUS_PROTOCOLS.md) | Paxos, Raft, Zab, leader election | Consistency vs. Availability | "How do CP systems agree on values?" |
+| [CLOCK_SYNCHRONIZATION](./CLOCK_SYNCHRONIZATION.md) | NTP, Lamport clocks, HLC, TrueTime | Accuracy vs. Complexity | "How do distributed systems reason about time?" |
 | [BATCH_AND_STREAM_PROCESSING](./08_WORKLOAD_OPTIMIZATION.md) | MapReduce, Kafka, Flink, Lambda architecture | Latency vs. Efficiency | "Do I need real-time or can I batch?" |
 | ARCHITECTURE_DIAGRAMS | Reference architectures, system blueprints | — | "What do complete systems look like?" |
 
