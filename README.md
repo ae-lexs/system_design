@@ -48,6 +48,9 @@ graph TB
         DD6[DD_CLOCK_SYNCHRONIZATION]
         DD7[DD_SERVICE_LEVEL_OBJECTIVES]
         DD8[DD_OBSERVABILITY]
+        DD9[DD_KAFKA_ARCHITECTURE]
+        DD10[DD_REDIS_INTERNALS]
+        DD11[DD_SEARCH_ENGINES]
     end
 
     subgraph Hub["Hub"]
@@ -69,6 +72,10 @@ graph TB
     C01 --> DD8
     C08 --> DD7
     C08 --> DD8
+
+    C02 --> DD9
+    C05 --> DD10
+    C04 --> DD11
 ```
 
 ---
@@ -103,6 +110,9 @@ graph TB
 | [DD_CLOCK_SYNCHRONIZATION](./DD_CLOCK_SYNCHRONIZATION.md) | Lamport, Vector, HLC, TrueTime | Ordering, causality, timestamps |
 | [DD_SERVICE_LEVEL_OBJECTIVES](./DD_SERVICE_LEVEL_OBJECTIVES.md) | SLOs, SLIs, SLAs, Error Budgets | Availability targets, production readiness |
 | [DD_OBSERVABILITY](./DD_OBSERVABILITY.md) | Four Golden Signals, Monitoring, Tracing | System health, debugging at scale |
+| [DD_KAFKA_ARCHITECTURE](./DD_KAFKA_ARCHITECTURE.md) | Partitions, Consumer Groups, Exactly-Once | Event streaming, async messaging |
+| [DD_REDIS_INTERNALS](./DD_REDIS_INTERNALS.md) | Data Structures, Clustering, Persistence | Caching, session storage, rate limiting |
+| [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) | Inverted Index, BM25, Elasticsearch | Full-text search, log analytics |
 
 ---
 
@@ -132,6 +142,9 @@ graph TB
 | Rate limiting | 08 | 09 (scaling) |
 | SLOs and availability | 01 (availability) | DD_SERVICE_LEVEL_OBJECTIVES |
 | Monitoring at scale | 01 (observability) | DD_OBSERVABILITY |
+| Message queues / Kafka | 02 (async) | DD_KAFKA_ARCHITECTURE |
+| Caching / Redis | 05 (caching) | DD_REDIS_INTERNALS |
+| Search / Elasticsearch | 04 (storage) | DD_SEARCH_ENGINES |
 
 ---
 
@@ -139,6 +152,7 @@ graph TB
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.2 | 2025-01 | High-frequency deep-dives: DD_KAFKA_ARCHITECTURE, DD_REDIS_INTERNALS, DD_SEARCH_ENGINES (~174K content) |
 | 3.1 | 2025-01 | SRE enhancement: Added DD_SERVICE_LEVEL_OBJECTIVES, DD_OBSERVABILITY; SRE references throughout |
 | 3.0 | 2025-01 | Major restructure: 10 core documents, content reorganized for progressive learning |
 | 2.2 | 2025-01 | Deep dives renamed with DD_ prefix; README streamlined |

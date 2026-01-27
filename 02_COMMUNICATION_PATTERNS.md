@@ -667,6 +667,8 @@ flowchart TD
 
 > **Reference:** Kreps, J. et al. (2011). "Kafka: A Distributed Messaging System for Log Processing." NetDB Workshop.
 
+> **Deep Dive:** See [DD_KAFKA_ARCHITECTURE](./DD_KAFKA_ARCHITECTURE.md) for partitions, consumer groups, exactly-once semantics, and production patterns.
+
 ```mermaid
 flowchart TB
     subgraph Producers
@@ -1569,6 +1571,12 @@ flowchart TB
 | [Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md) | REST enables HTTP caching; invalidation via events |
 | [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md) | Events can trigger replication |
 | [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | API Gateway handles rate limiting, circuit breaking |
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_KAFKA_ARCHITECTURE](./DD_KAFKA_ARCHITECTURE.md) | Partitions, consumer groups, ISR replication, exactly-once semantics |
 
 ---
 

@@ -411,6 +411,11 @@ flowchart TB
     HASH_IDX --> HASH_USE["Exact match only,<br/>O(1) average"]
     BITMAP_IDX --> BITMAP_USE["Enum columns,<br/>boolean flags"]
     GIN_IDX --> GIN_USE["Text search,<br/>JSON containment"]
+```
+
+> **Deep Dive:** See [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) for inverted indexes, BM25 scoring, and Elasticsearch architecture.
+
+```mermaid
     GIST_IDX --> GIST_USE["PostGIS, range types,<br/>nearest neighbor"]
     BRIN_IDX --> BRIN_USE["Time-series, append-only<br/>very large tables"]
 ```
@@ -1275,6 +1280,15 @@ Add:
 | 2025-01 | 2.1 | Added paper references (Bayer, O'Neil, Corbett, Taft) |
 | 2025-01 | 2.2 | Added LSM-Tree complexity analysis and amplification factors |
 | 2025-01 | 2.3 | Added failure handling section (B-Tree recovery, LSM recovery, S3 patterns) |
+
+---
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_STORAGE_ENGINES](./DD_STORAGE_ENGINES.md) | B-Tree, LSM-Tree, WAL, compaction |
+| [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) | Inverted indexes, TF-IDF, BM25, Elasticsearch |
 
 ---
 
