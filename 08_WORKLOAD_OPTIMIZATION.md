@@ -783,6 +783,164 @@ flowchart TB
 
 ---
 
+## Stream Processing Architectures
+
+### Lambda vs Kappa Architecture
+
+Two paradigms for processing data at scale with different trade-offs.
+
+#### Lambda Architecture
+
+**Concept:** Combine batch processing (accurate) with stream processing (fast) to get both completeness and low latency.
+
+```mermaid
+flowchart TB
+    subgraph "Lambda Architecture"
+        Source[Data Source] --> Batch[Batch Layer<br/>Spark, Hive]
+        Source --> Speed[Speed Layer<br/>Flink, Storm]
+
+        Batch --> BatchView[(Batch Views<br/>Complete, accurate)]
+        Speed --> RealTimeView[(Real-time Views<br/>Fast, approximate)]
+
+        BatchView --> Serving[Serving Layer]
+        RealTimeView --> Serving
+
+        Serving --> Query[Query<br/>Merge both views]
+    end
+```
+
+**Lambda Trade-offs:**
+
+| Advantage | Disadvantage |
+|-----------|--------------|
+| Handles late data via reprocessing | Two codebases (batch + stream) |
+| Batch provides correctness | Complexity of merging views |
+| Speed provides low latency | Higher operational cost |
+
+#### Kappa Architecture
+
+**Concept:** Use only stream processing. Reprocess by replaying the log from the beginning.
+
+```mermaid
+flowchart TB
+    subgraph "Kappa Architecture"
+        Source[Data Source] --> Log[(Immutable Log<br/>Kafka)]
+        Log --> Processor[Stream Processor<br/>Flink, Kafka Streams]
+        Processor --> View[(Materialized View)]
+
+        Reprocess[Reprocessing?] -->|"Start new consumer<br/>from offset 0"| Log
+    end
+```
+
+**Kappa Trade-offs:**
+
+| Advantage | Disadvantage |
+|-----------|--------------|
+| Single codebase | Reprocessing can be slow |
+| Simpler architecture | Requires log retention |
+| Better for event-driven systems | May not suit complex batch analytics |
+
+#### Lambda vs Kappa Decision
+
+| Choose Lambda When | Choose Kappa When |
+|--------------------|-------------------|
+| Need complex batch analytics (ML training) | Event-driven, continuous processing |
+| Very large historical data | Can retain full history in Kafka |
+| Different tools optimal for batch vs stream | Simpler operations preferred |
+| Require exact historical recomputation | Approximate reprocessing acceptable |
+
+### Stream Processing Frameworks Comparison
+
+#### Flink vs Spark Streaming vs Kafka Streams
+
+| Aspect | Apache Flink | Spark Streaming | Kafka Streams |
+|--------|--------------|-----------------|---------------|
+| **Processing Model** | True streaming (event-at-a-time) | Micro-batching | True streaming |
+| **Latency** | Milliseconds | Seconds (batch interval) | Milliseconds |
+| **State Management** | RocksDB, async checkpoints | External (Redis, etc.) | RocksDB, built-in |
+| **Exactly-Once** | Native, efficient | Requires careful setup | Native |
+| **Windowing** | Flexible (event/processing time) | Processing time focus | Flexible |
+| **Deployment** | Standalone cluster | Spark cluster | Library (no cluster) |
+| **Backpressure** | Native | Available | Consumer-based |
+| **Learning Curve** | Medium | Medium (Spark knowledge) | Low (just a library) |
+
+```mermaid
+flowchart TD
+    Start[Stream Processing Need] --> Q1{Latency requirement?}
+
+    Q1 -->|Sub-second| Q2{Deployment preference?}
+    Q1 -->|Seconds OK| Q3{Have Spark?}
+
+    Q2 -->|Standalone cluster OK| Flink[Apache Flink]
+    Q2 -->|Embedded in app| Q4{Already using Kafka?}
+
+    Q3 -->|Yes| Spark[Spark Structured Streaming]
+    Q3 -->|No| Q2
+
+    Q4 -->|Yes| KStreams[Kafka Streams]
+    Q4 -->|No| Flink
+```
+
+#### Exactly-Once Semantics Deep Dive
+
+**The Three Guarantees:**
+
+| Guarantee | Meaning | Implementation |
+|-----------|---------|----------------|
+| **At-most-once** | May lose messages | Fire-and-forget, no retry |
+| **At-least-once** | May duplicate messages | Retry until ack, idempotent consumers |
+| **Exactly-once** | Each message processed once | Transactional sources + sinks + idempotency |
+
+**Flink's Exactly-Once (Chandy-Lamport Algorithm):**
+
+```mermaid
+sequenceDiagram
+    participant JM as JobManager
+    participant S1 as Source
+    participant OP as Operator
+    participant Sink as Sink
+    participant State as State Backend
+
+    JM->>S1: Inject barrier #N
+    S1->>OP: Data + Barrier #N
+    OP->>State: Checkpoint state at barrier
+    OP->>Sink: Barrier #N
+
+    Note over S1,Sink: All operators aligned at barrier #N
+
+    Sink->>State: Checkpoint sink state
+    State->>JM: Checkpoint #N complete
+
+    Note over JM: On failure: restore from<br/>checkpoint #N, replay from offset
+```
+
+**Key Insight:** Flink's barriers flow through the DAG. When all operators have seen the barrier, state is atomically checkpointed. On failure, resume from checkpoint with source offsets.
+
+**Kafka Transactions for End-to-End Exactly-Once:**
+
+```python
+# Kafka + Flink pattern for exactly-once
+# Read from Kafka → Process → Write to Kafka atomically
+
+# Flink configuration
+env.enableCheckpointing(60000)  # 60s checkpoint interval
+env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE)
+
+# Kafka producer with transactions
+producer = KafkaProducer(
+    transactional_id="my-transactional-producer",
+    enable_idempotence=True
+)
+
+# The combination ensures:
+# 1. Consumer offsets committed atomically with produced messages
+# 2. No duplicates even after failure/restart
+```
+
+**Interview Phrase:** "For exactly-once stream processing, I'd use Flink with Kafka. Flink's Chandy-Lamport checkpointing creates consistent snapshots across the processing graph, while Kafka transactions ensure atomicity between consuming and producing. On failure, we restore from the last checkpoint and replay from the committed Kafka offset—no duplicates, no losses."
+
+---
+
 ## Decision Framework
 
 ### Workload Optimization Decision Tree

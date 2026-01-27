@@ -89,50 +89,55 @@ Diagrams in this handbook encode specific design decisions—they are not decora
 ```mermaid
 graph TB
     subgraph Layer1["Layer 1: Foundations"]
-        F1[FOUNDATIONAL_CONCEPTS]
-        F2[LATENCY_AND_THROUGHPUT]
+        F1[01_FOUNDATIONAL_CONCEPTS<br/>Scalability, CAP, Queuing Theory]
     end
-    
+
     subgraph Layer2["Layer 2: Core Trade-Offs"]
-        C1[CONSISTENCY_MODELS]
-        C2[ACID_AND_BASE_PROPERTIES]
-        C3[CONSISTENCY_AND_CONCENSUS]
+        C1[02_CONSISTENCY_AND_TRANSACTIONS<br/>ACID, Isolation, Linearizability]
     end
-    
+
     subgraph Layer3["Layer 3: Data Patterns"]
-        D1[DATABASE_SELECTION]
-        D2[DATA_MANAGEMENT]
-        D3[REPLICATION_PATTERNS]
-        D4[CACHING_STRATEGIES]
-        D5[CACHING_AND_CDN]
-        D6[READ_WRITE_OPTIMIZATION]
+        D1[03_DATA_STORAGE_AND_ACCESS<br/>Storage Engines, NewSQL]
+        D2[DATA_MANAGEMENT Hub]
+        D3[SHARDING_PARTITIONING]
+        D4[STORAGE_ENGINES]
+        D5[04_CACHING_AND_CONTENT_DELIVERY<br/>Cache Sizing, CDN]
     end
-    
+
     subgraph Layer4["Layer 4: Communication"]
-        M1[NETWORKING_AND_COMMUNICATION]
-        M2[API_DESIGN]
-        M3[REAL_TIME_COMMUNICATION]
-        M4[MESSAGING_AND_SYNCHRONOUS_PROCESSING]
-        M5[SERVICE_EXPOSURE]
+        M1[05_COMMUNICATION_PATTERNS<br/>REST, gRPC, HTTP/3, QUIC]
     end
-    
-    subgraph Layer5["Layer 5: Infrastructure"]
-        I1[LOAD_BALANCING_AND_SCALING]
-        I2[TRAFFIC_MANAGEMENT]
-        I3[DISTRIBUTED_SYSTEM_PATTERNS]
-        I4[BATCH_AND_STREAM_PROCESSING]
-        I5[ARCHITECTURE_DIAGRAMS]
+
+    subgraph Layer5["Layer 5: Distributed Systems"]
+        I1[06_DISTRIBUTED_SYSTEM_PATTERNS<br/>Coordination, Resilience]
+        I2[CONSISTENT_HASHING_DEEP_DIVE]
+        I3[DYNAMO_ARCHITECTURE]
+        I4[CONSENSUS_PROTOCOLS]
+        I5[CLOCK_SYNCHRONIZATION]
     end
-    
+
+    subgraph Layer6["Layer 6: Infrastructure"]
+        S1[07_SCALING_AND_INFRASTRUCTURE<br/>Load Balancing, Rate Limiting]
+        S2[08_WORKLOAD_OPTIMIZATION<br/>Lambda/Kappa, Stream Processing]
+    end
+
     subgraph Reference["Quick Reference"]
-        R1[QUICK_REFERENCE_CARD]
+        R1[09_QUICK_REFERENCE]
     end
-    
+
     Layer1 --> Layer2
     Layer2 --> Layer3
     Layer3 --> Layer4
     Layer4 --> Layer5
-    Layer5 --> Reference
+    Layer5 --> Layer6
+    Layer6 --> Reference
+
+    D2 --> D3
+    D2 --> D4
+    I1 --> I2
+    I1 --> I3
+    I1 --> I4
+    I1 --> I5
 ```
 
 ---
@@ -513,7 +518,10 @@ For targeted study, this table shows which documents build on others:
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.0 | 2025-01 | Initial handbook creation with 21 documents |
+| 1.0 | 2025-01 | Initial handbook creation with 12 core documents |
+| 2.0 | 2025-01 | Major enhancement: 7 new deep-dive documents (STORAGE_ENGINES, SHARDING_PARTITIONING, CONSISTENT_HASHING_DEEP_DIVE, DYNAMO_ARCHITECTURE, CONSENSUS_PROTOCOLS, CLOCK_SYNCHRONIZATION, DATA_MANAGEMENT hub) |
+| 2.1 | 2025-01 | P1 enhancements: Amdahl's Law, USL, linearizability, session guarantees, chain replication |
+| 2.2 | 2025-01 | P2 enhancements: Queuing theory, NewSQL, HTTP/3/QUIC, Lambda/Kappa architecture, cache sizing |
 
 ---
 

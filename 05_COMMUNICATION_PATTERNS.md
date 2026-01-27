@@ -346,6 +346,132 @@ sequenceDiagram
 
 ---
 
+### HTTP Protocol Evolution
+
+Understanding the evolution of HTTP helps explain why modern systems make certain transport choices.
+
+#### HTTP/1.1 → HTTP/2 → HTTP/3 (QUIC)
+
+```mermaid
+flowchart LR
+    subgraph "HTTP/1.1 (1997)"
+        H1[Text-based<br/>One request per connection<br/>Head-of-line blocking]
+    end
+
+    subgraph "HTTP/2 (2015)"
+        H2[Binary framing<br/>Multiplexing<br/>Header compression<br/>Still TCP-based]
+    end
+
+    subgraph "HTTP/3 (2022)"
+        H3[QUIC transport<br/>UDP-based<br/>0-RTT connection<br/>Stream-level recovery]
+    end
+
+    H1 -->|"Persistent connections<br/>pipelining failed"| H2
+    H2 -->|"TCP head-of-line<br/>blocking remains"| H3
+```
+
+#### The TCP Head-of-Line Blocking Problem
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant TCP as TCP Connection
+    participant Server
+
+    Note over TCP: HTTP/2 multiplexes streams over single TCP
+
+    Client->>TCP: Stream 1: Request A
+    Client->>TCP: Stream 2: Request B
+    Client->>TCP: Stream 3: Request C
+
+    TCP->>Server: Packet 1 (Stream 1)
+    Note over TCP: Packet 2 lost!
+    TCP->>Server: Packet 3 (Stream 3)
+
+    Note over TCP: TCP blocks ALL streams<br/>waiting for Packet 2 retransmit
+    Note over Client,Server: Stream 3 data arrived but<br/>can't be delivered to app
+
+    TCP->>Server: Packet 2 (retransmit)
+    Note over TCP: Now all streams unblocked
+```
+
+**HTTP/2 Problem:** Single TCP connection means single stream of bytes. One lost packet blocks all HTTP streams.
+
+#### QUIC: HTTP/3's Transport
+
+```mermaid
+flowchart TB
+    subgraph "Traditional Stack"
+        T_APP[Application: HTTP/2]
+        T_TLS[TLS 1.2/1.3]
+        T_TCP[TCP]
+        T_IP[IP]
+    end
+
+    subgraph "QUIC Stack"
+        Q_APP[Application: HTTP/3]
+        Q_QUIC[QUIC<br/>+ TLS 1.3 built-in<br/>+ Streams<br/>+ Reliability]
+        Q_UDP[UDP]
+        Q_IP[IP]
+    end
+
+    T_APP --> T_TLS --> T_TCP --> T_IP
+    Q_APP --> Q_QUIC --> Q_UDP --> Q_IP
+```
+
+**QUIC Benefits:**
+
+| Feature | TCP/TLS | QUIC | Impact |
+|---------|---------|------|--------|
+| **Connection setup** | 2-3 RTT (TCP + TLS) | 0-1 RTT | Faster first byte |
+| **Head-of-line blocking** | All streams blocked | Per-stream recovery | Better multiplexing |
+| **Connection migration** | Breaks on IP change | Connection ID survives | Mobile-friendly |
+| **Encryption** | Optional (TLS layer) | Mandatory, built-in | Always secure |
+| **Congestion control** | Kernel-space, slow to evolve | User-space, pluggable | Faster innovation |
+
+#### 0-RTT Connection Establishment
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+
+    Note over Client,Server: First connection (1-RTT)
+    Client->>Server: ClientHello + transport params
+    Server->>Client: ServerHello + cert + config token
+    Note over Client: Client stores server config
+
+    Note over Client,Server: Subsequent connection (0-RTT)
+    Client->>Server: ClientHello + early data + HTTP request
+    Server->>Client: Response (immediate!)
+    Note over Client,Server: Request sent before handshake completes
+```
+
+**0-RTT Caveat:** Early data can be replayed. Only safe for idempotent requests (GET, not POST with side effects).
+
+#### When to Use HTTP/3
+
+| Use HTTP/3 When | Stick with HTTP/2 When |
+|-----------------|------------------------|
+| High-latency networks (mobile, satellite) | Stable, low-latency connections |
+| Users frequently change networks | UDP is blocked (some corporate networks) |
+| Many small requests (multiplexing matters) | Need mature tooling/debugging |
+| Global user base with varied connectivity | Legacy infrastructure constraints |
+
+**Production Adoption:**
+
+| Service | HTTP/3 Status | Notes |
+|---------|---------------|-------|
+| **Google** | Default | Chrome + Google services |
+| **Cloudflare** | Available | Edge network support |
+| **AWS CloudFront** | Available | CDN support |
+| **Facebook** | Partial | Mobile apps |
+| **Netflix** | Testing | Streaming optimization |
+
+**Interview Phrase:** "HTTP/3 with QUIC solves TCP's head-of-line blocking by running over UDP with independent streams. This is particularly valuable for mobile users—QUIC connections survive network switches via connection IDs, and 0-RTT resumption reduces latency. The trade-off is less mature tooling and potential UDP blocking in some networks."
+
+---
+
 ### Synchronous Decision Tree
 
 ```mermaid

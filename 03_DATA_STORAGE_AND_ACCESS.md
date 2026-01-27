@@ -265,6 +265,8 @@ flowchart TD
 | **Predictable latency** | More predictable | Compaction can cause spikes |
 | **Typical use cases** | OLTP, random access | Write-heavy, time-series, logs |
 
+> **Deep Dive:** For comprehensive coverage including compaction strategies, write amplification analysis, and production tuning, see [STORAGE_ENGINES.md](./STORAGE_ENGINES.md).
+
 ### Decision Framework: When to Use Which
 
 ```mermaid
@@ -643,6 +645,124 @@ WHERE user_id = ? AND created_at > ?;
 -- ❌ Anti-pattern: Query without partition key
 SELECT * FROM orders_by_user WHERE status = 'pending';
 ```
+
+### NewSQL: Distributed SQL Databases
+
+NewSQL databases combine the scalability of NoSQL with the ACID guarantees and SQL interface of traditional relational databases.
+
+#### The NewSQL Promise
+
+```mermaid
+flowchart LR
+    subgraph "Traditional Trade-off"
+        SQL["SQL/RDBMS<br/>ACID + SQL<br/>Limited scale"]
+        NoSQL["NoSQL<br/>Scalable<br/>No ACID/SQL"]
+    end
+
+    subgraph "NewSQL"
+        NEW["NewSQL<br/>ACID + SQL + Scale"]
+    end
+
+    SQL --> NEW
+    NoSQL --> NEW
+```
+
+#### Key NewSQL Systems
+
+| System | Company | Key Innovation | Consistency Model |
+|--------|---------|----------------|-------------------|
+| **Spanner** | Google | TrueTime (GPS/atomic clocks) | External consistency (strongest) |
+| **CockroachDB** | Cockroach Labs | Raft + HLC | Serializable |
+| **TiDB** | PingCAP | MySQL-compatible, Raft | Snapshot isolation |
+| **YugabyteDB** | Yugabyte | PostgreSQL-compatible | Serializable |
+| **VoltDB** | VoltDB | In-memory, partitioned | Serializable |
+
+#### Architecture Patterns
+
+**Google Spanner Architecture:**
+
+```mermaid
+flowchart TB
+    subgraph "Global Spanner Deployment"
+        subgraph "Zone A"
+            SA1[Spanserver]
+            SA2[Spanserver]
+        end
+
+        subgraph "Zone B"
+            SB1[Spanserver]
+            SB2[Spanserver]
+        end
+
+        subgraph "Zone C"
+            SC1[Spanserver]
+            SC2[Spanserver]
+        end
+
+        TT[TrueTime API<br/>GPS + Atomic Clocks]
+    end
+
+    SA1 <-->|Paxos| SB1
+    SB1 <-->|Paxos| SC1
+    SA1 --> TT
+    SB1 --> TT
+    SC1 --> TT
+```
+
+**TrueTime and Commit Wait:**
+
+```
+TrueTime API returns: [earliest, latest] time interval
+
+Commit protocol:
+1. Acquire locks
+2. Get TrueTime: t = TT.now()
+3. Assign commit timestamp: s = t.latest
+4. Wait until TT.now().earliest > s  (commit wait)
+5. Release locks and commit
+
+Result: If transaction A commits before B starts,
+        A's timestamp < B's timestamp (external consistency)
+```
+
+#### CockroachDB vs Traditional Sharding
+
+| Aspect | Manual Sharding | CockroachDB |
+|--------|-----------------|-------------|
+| **Cross-shard transactions** | Manual 2PC, complex | Automatic, transparent |
+| **Rebalancing** | Manual migration | Automatic range splits |
+| **Query routing** | Application logic | Automatic |
+| **Schema changes** | Coordinated rollout | Online DDL |
+| **Consistency** | Varies by implementation | Serializable guarantee |
+
+```sql
+-- CockroachDB: Distributed SQL with automatic sharding
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    total DECIMAL(10,2),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    INDEX (user_id, created_at DESC)
+);
+
+-- This just works across regions:
+BEGIN;
+  INSERT INTO orders (user_id, total) VALUES ($1, $2);
+  UPDATE accounts SET balance = balance - $2 WHERE id = $1;
+COMMIT;
+-- Automatic distributed transaction with serializable isolation
+```
+
+#### When to Choose NewSQL
+
+| Choose NewSQL When | Choose NoSQL When | Choose Traditional SQL When |
+|--------------------|-------------------|----------------------------|
+| Need ACID + horizontal scale | Eventual consistency OK | Single-node sufficient |
+| Complex SQL queries required | Simple key-value access | Mature ecosystem needed |
+| Global distribution | Write-heavy, simple reads | Cost is primary concern |
+| Strong consistency required | Flexible schema critical | Team expertise in RDBMS |
+
+**Interview Distinction:** "NewSQL gives us the best of both worlds—SQL semantics with horizontal scalability—but at the cost of complexity and latency. Spanner achieves external consistency using TrueTime with a commit-wait period. CockroachDB uses hybrid logical clocks for similar guarantees without specialized hardware. I'd choose NewSQL when I need distributed transactions across regions with strong consistency."
 
 ---
 

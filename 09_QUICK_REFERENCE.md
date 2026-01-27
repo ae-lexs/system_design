@@ -70,6 +70,59 @@
 | SSD random read | 10,000 IOPS | Great for random workloads |
 | HDD random read | 100 IOPS | 100× worse than SSD |
 
+### Queuing Theory Quick Reference
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 UTILIZATION VS LATENCY                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Utilization (ρ)    Wait Time Multiplier    Recommendation      │
+│  ──────────────────────────────────────────────────────────────  │
+│       50%                 1×                 Comfortable         │
+│       70%                 2.3×               Target zone         │
+│       80%                 4×                 Warning             │
+│       90%                 9×                 Critical            │
+│       95%                 19×                Near collapse       │
+│                                                                  │
+│  KEY INSIGHT: At 90% utilization, latency is 9× service time    │
+│  Target 70% utilization for production systems                  │
+│                                                                  │
+│  Thread Pool Sizing:                                             │
+│  Threads = (target_throughput × avg_latency) / target_util      │
+│                                                                  │
+│  Example: 1000 req/s, 100ms latency, 70% target                 │
+│  Threads = (1000 × 0.1) / 0.7 = 143 threads                     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Scalability Laws
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SCALABILITY LAWS                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  AMDAHL'S LAW (Parallelization Limit)                           │
+│  ─────────────────────────────────────                          │
+│  Speedup = 1 / (S + (1-S)/N)                                    │
+│                                                                  │
+│  S = serial fraction, N = number of processors                   │
+│                                                                  │
+│  If 10% is serial: max speedup = 10× (no matter how many nodes) │
+│                                                                  │
+│  UNIVERSAL SCALABILITY LAW (Coordination Overhead)              │
+│  ─────────────────────────────────────────────────              │
+│  At some point, adding nodes DECREASES throughput               │
+│  due to coordination overhead (cache invalidation, locks)       │
+│                                                                  │
+│  Optimal cluster size = √(1-σ)/κ                                │
+│  where σ = contention, κ = coherency coefficient                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 2. Back-of-Envelope Estimation
@@ -212,22 +265,26 @@ flowchart TD
 ```mermaid
 flowchart TD
     START[Database Selection] --> Q1{Data Structure<br/>Known Upfront?}
-    
+
     Q1 -->|"Yes, Relational"| Q2{Need ACID<br/>Transactions?}
     Q1 -->|"No, Flexible"| Q3{Primary Access<br/>Pattern?}
-    
-    Q2 -->|"Yes"| SQL[PostgreSQL / MySQL]
+
+    Q2 -->|"Yes"| Q5{Need Global<br/>Scale + ACID?}
     Q2 -->|"Eventual OK"| Q4{Scale<br/>Requirements?}
-    
+
+    Q5 -->|"Yes"| NEWSQL[NewSQL: Spanner<br/>CockroachDB, TiDB]
+    Q5 -->|"Single Region"| SQL[PostgreSQL / MySQL]
+
     Q3 -->|"Key-Value"| KV[Redis / DynamoDB]
     Q3 -->|"Document"| DOC[MongoDB]
     Q3 -->|"Time-Series"| TS[Cassandra / TimescaleDB]
     Q3 -->|"Graph"| GRAPH[Neo4j]
-    
+
     Q4 -->|"Horizontal"| NOSQL[DynamoDB / Cassandra]
     Q4 -->|"Moderate"| SQL
-    
+
     style SQL fill:#e1f5fe
+    style NEWSQL fill:#c8e6c9
     style KV fill:#fff3e0
     style DOC fill:#fff3e0
     style TS fill:#fff3e0
@@ -235,25 +292,66 @@ flowchart TD
     style NOSQL fill:#fff3e0
 ```
 
+### NewSQL Quick Reference
+
+| System | Key Feature | Use When |
+|--------|-------------|----------|
+| **Spanner** | TrueTime (GPS clocks) | Global ACID, Google Cloud |
+| **CockroachDB** | Raft + HLC | Multi-region, PostgreSQL compatible |
+| **TiDB** | MySQL compatible | MySQL migration, horizontal scale |
+| **YugabyteDB** | PostgreSQL compatible | PostgreSQL migration, cloud-native |
+
 ### Caching Strategy Selection
 
 ```mermaid
 flowchart TD
     START[Caching Decision] --> Q1{Read:Write<br/>Ratio?}
-    
+
     Q1 -->|"Read-Heavy<br/>(>10:1)"| Q2{Staleness<br/>Tolerance?}
     Q1 -->|"Write-Heavy"| Q3{Consistency<br/>Critical?}
     Q1 -->|"Balanced"| EVALUATE[Evaluate if caching helps]
-    
+
     Q2 -->|"Seconds OK"| CACHE_ASIDE[Cache-Aside + TTL]
     Q2 -->|"Must be fresh"| READ_THROUGH[Read-Through]
-    
+
     Q3 -->|"Yes"| WRITE_THROUGH[Write-Through]
     Q3 -->|"No"| WRITE_BEHIND[Write-Behind]
-    
+
     EVALUATE --> Q4{Expensive to<br/>Compute/Fetch?}
     Q4 -->|"Yes"| CACHE_ASIDE
     Q4 -->|"No"| NO_CACHE[Consider not caching]
+```
+
+### Cache Sizing Formulas
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    CACHE SIZING                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  HIT RATE (Zipf Distribution - typical web traffic)             │
+│  ─────────────────────────────────────────────────              │
+│  Cache Size (% of total)    Expected Hit Rate                   │
+│       1%                         ~50-60%                        │
+│       5%                         ~70-80%                        │
+│       10%                        ~80-85%                        │
+│       20%                        ~90-95%                        │
+│                                                                  │
+│  EFFECTIVE LATENCY                                               │
+│  ────────────────                                                │
+│  Latency = (hit_rate × cache_latency) + (miss_rate × db_latency)│
+│                                                                  │
+│  Example: 90% hit rate, 5ms cache, 100ms DB                     │
+│  Latency = 0.9 × 5 + 0.1 × 100 = 14.5ms (vs 100ms uncached)    │
+│                                                                  │
+│  REDIS MEMORY ESTIMATE                                           │
+│  ─────────────────────                                           │
+│  Memory = items × (key_size + value_size + 90 bytes) × 1.5      │
+│                                                                  │
+│  Example: 1M items, 32B keys, 256B values                       │
+│  Memory = 1M × (32 + 256 + 90) × 1.5 ≈ 567 MB                  │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Consistency Model Selection
@@ -688,16 +786,24 @@ flowchart TD
 │                 PRE-INTERVIEW CHECKLIST                          │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
+│  FUNDAMENTALS:                                                   │
 │  □ Can explain CAP theorem in 30 seconds                        │
 │  □ Know latency numbers (memory → disk → network)               │
 │  □ Can do back-of-envelope calculations                         │
-│  □ Know when to use SQL vs NoSQL                                │
+│  □ Know when to use SQL vs NoSQL vs NewSQL                      │
 │  □ Can explain caching strategies and trade-offs                │
 │  □ Know load balancing algorithms                               │
-│  □ Can design for horizontal scaling                            │
 │  □ Understand eventual vs strong consistency                    │
 │  □ Know message queue vs pub/sub patterns                       │
-│  □ Can articulate trade-offs clearly                            │
+│                                                                  │
+│  ADVANCED CONCEPTS:                                              │
+│  □ Can explain linearizability vs serializability               │
+│  □ Know queuing theory (utilization → latency relationship)     │
+│  □ Understand tail latency compounding in fan-out               │
+│  □ Can size a cache using Zipf distribution rules               │
+│  □ Know Amdahl's Law limits on parallelization                  │
+│  □ Understand exactly-once semantics (idempotency + dedup)      │
+│  □ Know consensus basics (Raft leader election)                 │
 │                                                                  │
 │  DURING THE INTERVIEW:                                           │
 │  □ Ask clarifying questions first                               │

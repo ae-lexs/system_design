@@ -1475,7 +1475,114 @@ class OrderQueryHandler:
 
 ---
 
-### 9. Change Data Capture (CDC)
+### 9. Replication Patterns
+
+#### Pattern Overview
+
+Replication ensures data durability and availability by maintaining copies across multiple nodes.
+
+> **Deep Dive:** For comprehensive coverage of Dynamo-style replication (sloppy quorums, hinted handoff, Merkle trees), see [DYNAMO_ARCHITECTURE.md](./DYNAMO_ARCHITECTURE.md).
+
+#### Primary-Backup Replication
+
+```mermaid
+flowchart LR
+    subgraph "Primary-Backup"
+        Client[Client] -->|Write| Primary[(Primary)]
+        Client -->|Read| Primary
+        Primary -->|"Async Replicate"| Backup1[(Backup 1)]
+        Primary -->|"Async Replicate"| Backup2[(Backup 2)]
+    end
+```
+
+**Properties:**
+- All writes go to primary
+- Reads can go to primary or backups (with staleness trade-off)
+- On primary failure, promote backup
+
+**Trade-offs:**
+
+| Aspect | Synchronous | Asynchronous |
+|--------|-------------|--------------|
+| **Durability** | No data loss on failover | May lose recent writes |
+| **Latency** | Higher (wait for backup ack) | Lower (fire and forget) |
+| **Availability** | Lower (backup failure blocks writes) | Higher |
+
+#### Chain Replication
+
+**Concept:** Replicate writes sequentially through a chain of nodes. Reads served from the tail.
+
+```mermaid
+flowchart LR
+    subgraph "Chain Replication"
+        Client[Client]
+        Head["Head<br/>(Writes)"]
+        M1[Middle 1]
+        M2[Middle 2]
+        Tail["Tail<br/>(Reads)"]
+
+        Client -->|"1. Write"| Head
+        Head -->|"2. Forward"| M1
+        M1 -->|"3. Forward"| M2
+        M2 -->|"4. Forward"| Tail
+        Tail -->|"5. Ack to client"| Client
+
+        Client2[Client] -->|"Read"| Tail
+    end
+```
+
+**How It Works:**
+1. **Writes:** Client sends to head; head forwards down the chain
+2. **Reads:** Client reads from tail (guaranteed to see all committed writes)
+3. **Acks:** Tail sends acknowledgment once write reaches it
+4. **Failure:** Chain master reconfigures chain (removes failed node)
+
+**Chain Replication Properties:**
+
+| Property | Value | Comparison to Primary-Backup |
+|----------|-------|------------------------------|
+| **Strong consistency** | Yes | Same |
+| **Read throughput** | High (tail only) | Higher (reads don't hit primary) |
+| **Write latency** | Chain length × per-hop latency | Higher |
+| **Failure recovery** | Remove and rejoin | Similar complexity |
+| **Read load distribution** | All on tail | Better (can use replicas) |
+
+**Failure Scenarios:**
+
+```mermaid
+flowchart TD
+    subgraph "Chain Failure Handling"
+        HF["Head Fails"]
+        MF["Middle Fails"]
+        TF["Tail Fails"]
+
+        HF -->|"Promote next as head"| HF_R["M1 becomes new head"]
+        MF -->|"Remove from chain"| MF_R["Head→M2 directly"]
+        TF -->|"Promote predecessor"| TF_R["M2 becomes new tail"]
+    end
+```
+
+**When to Use Chain Replication:**
+
+| Use Chain Replication | Use Primary-Backup |
+|----------------------|-------------------|
+| Strong consistency required | Eventual consistency OK |
+| Read-heavy workload | Balanced read/write |
+| Want to offload primary reads | Simple architecture preferred |
+| Can tolerate higher write latency | Low write latency critical |
+
+**Production Implementations:**
+- **FAWN-KV:** Facebook's flash storage system
+- **CORFU:** Log-structured shared storage
+- **Hibari:** Key-value store
+- **Microsoft Azure Storage:** Uses chain replication internally
+
+**CRDT Alternative:**
+For conflict-free eventual consistency without coordination, see Conflict-free Replicated Data Types (CRDTs), which converge automatically without a chain.
+
+---
+
+### 10. Change Data Capture (CDC)
 
 #### Pattern Overview
 
