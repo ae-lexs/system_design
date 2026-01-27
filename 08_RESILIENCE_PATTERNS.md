@@ -32,6 +32,9 @@ graph TB
 
 ## 1. Circuit Breaker
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 22: Addressing Cascading Failures.
+
 ### Mental Model: Electrical Circuit Breaker
 
 ```mermaid
@@ -182,6 +185,9 @@ flowchart TB
 ---
 
 ## 2. Retry Pattern with Exponential Backoff
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 22: Addressing Cascading Failures.
 
 ### The Problem
 
@@ -460,6 +466,9 @@ class ServiceClient:
 ---
 
 ## 4. Backpressure
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 21: Handling Overload.
 
 ### The Problem
 
@@ -745,6 +754,94 @@ X-RateLimit-Reset: 1640000030
 
 ---
 
+## 7. Incident Response Basics
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapters 11-15: Being On-Call, Effective Troubleshooting, Emergency Response, Managing Incidents, Postmortem Culture.
+
+### Introduction to Incident Management
+
+Incident management is the process of detecting, responding to, and resolving unplanned disruptions to system availability or performance. Even the most resilient systems experience incidents; the difference between mature and immature organizations lies in how they handle them. Effective incident response minimizes user impact, reduces mean time to recovery (MTTR), and builds organizational learning.
+
+A well-defined incident management process ensures that when things go wrong, teams respond systematically rather than chaotically. This includes clear escalation paths, defined roles and responsibilities, and established communication channels.
+
+### Incident Severity Classification
+
+Incidents are typically classified by severity to prioritize response efforts and allocate resources appropriately:
+
+| Severity | Name | Description | Response Time | Example |
+|----------|------|-------------|---------------|---------|
+| **SEV1 / P1** | Critical | Complete service outage or data loss affecting all users | Immediate (24/7) | Production database down, payment processing failed |
+| **SEV2 / P2** | Major | Significant degradation affecting many users or key functionality | < 30 minutes | Search functionality broken, high latency across services |
+| **SEV3 / P3** | Minor | Partial degradation with limited user impact | < 4 hours (business hours) | Single region affected, non-critical feature broken |
+| **SEV4 / P4** | Low | Cosmetic or minor issues with minimal impact | Best effort | UI glitch, slow non-critical background job |
+
+Severity levels should be defined clearly for your organization and communicated to all team members. When in doubt, escalate to a higher severity; it's better to over-respond initially and downgrade than to under-respond to a critical issue.
+
+### Incident Response Lifecycle
+
+The incident response process follows a structured lifecycle that ensures systematic handling from detection through resolution.
+
+```mermaid
+flowchart LR
+    D[Detect]
+    T[Triage]
+    M[Mitigate]
+    R[Resolve]
+    L[Learn]
+
+    D -->|Alert triggers| T
+    T -->|Assign severity & team| M
+    M -->|Stop bleeding| R
+    R -->|Root cause fix| L
+    L -->|Postmortem| D
+
+    style D fill:#e1f5fe
+    style T fill:#fff3e0
+    style M fill:#ffebee
+    style R fill:#e8f5e9
+    style L fill:#f3e5f5
+```
+
+**1. Detect:** Monitoring systems, automated alerts, or user reports identify an anomaly. The goal is to detect issues before users do, using metrics, logs, and synthetic monitoring.
+
+**2. Triage:** Assess the scope and impact to determine severity. Assign an incident commander (IC) who owns coordination, and engage the appropriate on-call responders. Establish a communication channel (e.g., dedicated Slack channel, bridge call).
+
+**3. Mitigate:** Focus on stopping the bleeding, not finding the root cause. Common mitigation actions include: rollback recent deployments, scale up capacity, redirect traffic, enable feature flags to disable problematic code, or restart affected services. Document all actions taken.
+
+**4. Resolve:** Once the immediate impact is mitigated, work toward a permanent fix. This may involve deploying a proper fix, restoring data, or implementing additional safeguards. Confirm with monitoring that the system has returned to normal.
+
+**5. Learn:** Conduct a postmortem to capture lessons learned, identify systemic improvements, and share knowledge across the organization.
+
+### Postmortem Culture
+
+Postmortems (also called incident reviews or retrospectives) are structured analyses conducted after an incident. The goal is organizational learning, not punishment.
+
+**Key principles of blameless postmortems:**
+
+- **Focus on systems, not people.** Assume everyone acted with good intentions and the best information available at the time. If a human made an error, ask why the system allowed that error to have such an impact.
+
+- **Seek contributing factors, not root cause.** Complex systems rarely fail for a single reason. Identify the chain of events and systemic weaknesses that combined to cause the incident.
+
+- **Document honestly.** The postmortem is only valuable if it accurately reflects what happened. Creating a culture where people feel safe to be honest about mistakes leads to better outcomes.
+
+- **Assign actionable follow-ups.** Each postmortem should produce concrete action items with clear owners and deadlines. Track these items to completion.
+
+- **Share broadly.** Postmortems should be shared across the organization. Incidents in one team often reveal vulnerabilities that exist elsewhere.
+
+**A typical postmortem document includes:**
+
+1. Incident summary and timeline
+2. Impact assessment (duration, affected users, revenue impact)
+3. Contributing factors analysis
+4. What went well in the response
+5. What could be improved
+6. Action items with owners and due dates
+
+Organizations that embrace blameless postmortems create a culture of continuous improvement where incidents become opportunities for learning rather than occasions for blame.
+
+---
+
 ## Chapter Summary
 
 ### Pattern Decision Matrix
@@ -758,6 +855,7 @@ flowchart TD
     Start -->|Resource Isolation| Bulk[Bulkhead]
     Start -->|Flow Control| BP[Backpressure]
     Start -->|Protect System| RL[Rate Limiting]
+    Start -->|When Failure Occurs| IR[Incident Response]
 ```
 
 ### Quick Reference Card
@@ -790,6 +888,11 @@ flowchart TD
 |   * Token bucket: allows bursts, configurable                     |
 |   * Sliding window: good accuracy, common choice                  |
 |   * Distribute via Redis for multi-server                         |
++-----------------------------------------------------------------+
+| INCIDENT RESPONSE:                                                |
+|   * Detect -> Triage -> Mitigate -> Resolve -> Learn              |
+|   * Classify by severity (SEV1-SEV4 / P1-P4)                      |
+|   * Blameless postmortems focus on systems, not people            |
 +-----------------------------------------------------------------+
 | COMBINATION:                                                      |
 |   * Use all patterns together for defense in depth                |
@@ -834,6 +937,8 @@ flowchart TD
 |------|--------|
 | 2025-01 | Initial document extracted from Distributed System Patterns |
 | 2025-01 | Added Rate Limiting section from Scaling & Infrastructure |
+| 2025-01 | Added SRE book references to Circuit Breaker, Retry/Backoff, Backpressure sections |
+| 2025-01 | Added Section 7: Incident Response Basics with severity classification, lifecycle, and postmortem culture |
 
 ---
 
@@ -842,3 +947,8 @@ flowchart TD
 **Previous:** [07 — Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md)
 **Next:** [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
 **Index:** [README](./README.md)
+
+### Related Deep Dives
+
+- [DD — Service Level Objectives](./DD_SERVICE_LEVEL_OBJECTIVES.md)
+- [DD — Observability](./DD_OBSERVABILITY.md)

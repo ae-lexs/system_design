@@ -140,7 +140,10 @@ flowchart TD
 
 ## 2. Load Balancing
 
-> **Reference:** Maglev (2016). "Maglev: A Fast and Reliable Software Network Load Balancer." NSDI.
+> **References:**
+> - Maglev (2016). "Maglev: A Fast and Reliable Software Network Load Balancer." NSDI.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 19: Load Balancing at the Frontend.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 20: Load Balancing in the Datacenter.
 
 ### What Load Balancers Do
 
@@ -391,6 +394,9 @@ Some use cases require stateful design:
 ---
 
 ## 4. Auto-Scaling
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapters on capacity planning and demand forecasting.
 
 ### Why Auto-Scaling?
 
@@ -794,6 +800,10 @@ flowchart TB
 
 ## 8. High Availability Patterns
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 3: Embracing Risk.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 23: Managing Critical State.
+
 ### Availability Targets
 
 | Level | Uptime/Year | Downtime/Year | Typical Use |
@@ -882,6 +892,9 @@ flowchart TD
 ---
 
 ## 9. Capacity Planning
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapters on capacity planning and provisioning.
 
 ### Estimation Framework
 
@@ -1012,6 +1025,13 @@ Sizing:
 |------|--------|
 | 2025-01 | Initial document with scaling, load balancing, rate limiting, HA patterns |
 | 2025-01 | Quality review: Added paper references (Maglev 2016, SRE book), complexity tables for load balancing and rate limiting algorithms |
+
+---
+
+## Connections
+
+- [DD — Service Level Objectives](./DD_SERVICE_LEVEL_OBJECTIVES.md) — for availability targets and SLO/SLI definitions
+- [DD — Observability](./DD_OBSERVABILITY.md) — for monitoring auto-scaling decisions and system health
 
 ---
 

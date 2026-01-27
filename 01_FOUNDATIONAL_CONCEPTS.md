@@ -296,6 +296,10 @@ I'd choose **horizontal scaling** when:
 
 ## 3. Availability
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 1 — Introduction.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 3 — Embracing Risk.
+
 ### Definition
 
 Availability is the proportion of time a system is operational and accessible when needed. It's measured as a percentage of uptime over a given period.
@@ -307,6 +311,11 @@ Availability = ─────────────────
 ```
 
 ### The Nines of Availability
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 4 — Service Level Objectives.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 5 — Eliminating Toil.
+> - See also: [DD_SERVICE_LEVEL_OBJECTIVES.md](./DD_SERVICE_LEVEL_OBJECTIVES.md) for SLO/error budget deep dive.
 
 | Availability | Common Name | Downtime/Year | Downtime/Month | Downtime/Week | Typical Use Case |
 |--------------|-------------|---------------|----------------|---------------|------------------|
@@ -410,6 +419,10 @@ graph TB
 
 ## 4. Reliability
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 1 — Introduction.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 3 — Embracing Risk.
+
 ### Definition
 
 Reliability is the probability that a system will perform its intended function correctly over a specified period under stated conditions.
@@ -423,6 +436,10 @@ Reliability is the probability that a system will perform its intended function 
 | **MTTF** | Mean Time To Failure | For non-repairable components | Total time / Number of units |
 | **MTTD** | Mean Time To Detect | Time to discover a failure occurred | Detection time / Number of failures |
 | **MTTI** | Mean Time To Investigate | Time to identify root cause | Investigation time / Number of failures |
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 17 — Testing for Reliability.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 13 — Emergency Response.
 
 #### The Availability Formula
 
@@ -1255,6 +1272,10 @@ How easy is it to operate, maintain, diagnose, and update the system? Often over
 
 ### The Three Pillars of Observability
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 6 — Monitoring Distributed Systems.
+> - See also: [DD_OBSERVABILITY.md](./DD_OBSERVABILITY.md) for Four Golden Signals and monitoring deep dive.
+
 ```mermaid
 graph TD
     subgraph "Observability"
@@ -1262,11 +1283,11 @@ graph TD
         M[Metrics<br/>Aggregated measurements]
         T[Traces<br/>Request flow]
     end
-    
+
     L --> Q1["What happened?<br/>Error details, stack traces"]
     M --> Q2["What's the state?<br/>QPS, latency, error rate"]
     T --> Q3["Where did time go?<br/>Service-to-service latency"]
-    
+
     L & M & T --> DIAGNOSE[Complete Picture<br/>for Diagnosis]
 ```
 
@@ -1332,6 +1353,13 @@ Before your interview, ensure you can:
 | [08 — Resilience Patterns](./08_RESILIENCE_PATTERNS.md) | CAP/PACELC application, availability patterns |
 | [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | Horizontal scaling implementation |
 | [10 — Quick Reference](./10_QUICK_REFERENCE.md) | Estimation formulas, decision trees |
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_SERVICE_LEVEL_OBJECTIVES.md](./DD_SERVICE_LEVEL_OBJECTIVES.md) | SLIs, SLOs, SLAs, error budgets, availability targets |
+| [DD_OBSERVABILITY.md](./DD_OBSERVABILITY.md) | Four Golden Signals, monitoring, logging, tracing, alerting |
 
 ---
 

@@ -46,6 +46,8 @@ graph TB
         DD4[DD_DYNAMO_ARCHITECTURE]
         DD5[DD_CONSENSUS_PROTOCOLS]
         DD6[DD_CLOCK_SYNCHRONIZATION]
+        DD7[DD_SERVICE_LEVEL_OBJECTIVES]
+        DD8[DD_OBSERVABILITY]
     end
 
     subgraph Hub["Hub"]
@@ -62,6 +64,11 @@ graph TB
     C06 --> DD4
     C07 --> DD5
     DD5 --> DD6
+
+    C01 --> DD7
+    C01 --> DD8
+    C08 --> DD7
+    C08 --> DD8
 ```
 
 ---
@@ -94,6 +101,8 @@ graph TB
 | [DD_DYNAMO_ARCHITECTURE](./DD_DYNAMO_ARCHITECTURE.md) | Vector Clocks, Sloppy Quorum, Gossip | AP systems, eventual consistency |
 | [DD_CONSENSUS_PROTOCOLS](./DD_CONSENSUS_PROTOCOLS.md) | Paxos, Raft, Zab | CP systems, leader election |
 | [DD_CLOCK_SYNCHRONIZATION](./DD_CLOCK_SYNCHRONIZATION.md) | Lamport, Vector, HLC, TrueTime | Ordering, causality, timestamps |
+| [DD_SERVICE_LEVEL_OBJECTIVES](./DD_SERVICE_LEVEL_OBJECTIVES.md) | SLOs, SLIs, SLAs, Error Budgets | Availability targets, production readiness |
+| [DD_OBSERVABILITY](./DD_OBSERVABILITY.md) | Four Golden Signals, Monitoring, Tracing | System health, debugging at scale |
 
 ---
 
@@ -121,6 +130,8 @@ graph TB
 | Caching strategy | 05 | 04 (storage) |
 | Handling failures | 08 | DD_DYNAMO |
 | Rate limiting | 08 | 09 (scaling) |
+| SLOs and availability | 01 (availability) | DD_SERVICE_LEVEL_OBJECTIVES |
+| Monitoring at scale | 01 (observability) | DD_OBSERVABILITY |
 
 ---
 
@@ -128,6 +139,7 @@ graph TB
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.1 | 2025-01 | SRE enhancement: Added DD_SERVICE_LEVEL_OBJECTIVES, DD_OBSERVABILITY; SRE references throughout |
 | 3.0 | 2025-01 | Major restructure: 10 core documents, content reorganized for progressive learning |
 | 2.2 | 2025-01 | Deep dives renamed with DD_ prefix; README streamlined |
 | 2.0 | 2025-01 | 7 deep-dive documents added (~150K content) |
