@@ -1,9 +1,9 @@
-# 03 — Data Storage and Access
+# 04 — Data Storage and Access
 
 > How you store and access data determines everything: latency, throughput, consistency, and cost. Master the storage layer, and you master the system.
 
-**Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Builds toward:** [04 — Caching & Content Delivery](./04_CACHING_AND_CONTENT_DELIVERY.md), [06 — Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md)  
+**Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [03 — Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
+**Builds toward:** [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md), [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md)
 **Estimated study time:** 4-5 hours
 
 ---
@@ -67,6 +67,8 @@ flowchart TB
 ---
 
 ### B-Tree Storage Engine (Read-Optimized)
+
+> **Reference:** Bayer, R. & McCreight, E. (1972). "Organization and Maintenance of Large Ordered Indexes." Acta Informatica.
 
 B-Trees are the backbone of traditional relational databases. They maintain sorted data in a balanced tree structure optimized for both reads and writes.
 
@@ -147,6 +149,8 @@ sequenceDiagram
 
 ### LSM-Tree Storage Engine (Write-Optimized)
 
+> **Reference:** O'Neil, P. et al. (1996). "The Log-Structured Merge-Tree (LSM-Tree)." Acta Informatica.
+
 Log-Structured Merge Trees convert random writes into sequential writes, dramatically improving write throughput at the cost of read performance.
 
 #### How LSM-Trees Work
@@ -218,6 +222,32 @@ flowchart TD
 
 **Read Amplification:** A single read may need to check multiple levels. Bloom filters help skip SSTables that definitely don't contain the key.
 
+#### LSM-Tree Performance Characteristics
+
+| Operation | Time Complexity | Space Complexity | Notes |
+|-----------|-----------------|------------------|-------|
+| **Write** | O(1) amortized | O(log n) levels | Append to MemTable + WAL |
+| **Point lookup** | O(L) worst case | — | L = number of levels, mitigated by Bloom filters |
+| **Range scan** | O(L × k) | — | Must merge-sort across levels |
+| **Compaction** | O(n) per level | O(n) temporary | Background process |
+
+**Amplification Factors:**
+
+| Factor | Definition | Typical Values | Impact |
+|--------|------------|----------------|--------|
+| **Write amplification** | Bytes written to disk / bytes written by app | 10-30× | SSD wear, write throughput |
+| **Read amplification** | Disk reads / logical reads | 1-10× | Read latency |
+| **Space amplification** | Disk space / logical data size | 1.1-2× | Storage cost |
+
+```
+Leveled Compaction Analysis:
+- L levels, each 10× larger than previous
+- Level i has ~10^i files
+- Each key may be rewritten ~L times
+- Write amplification ≈ 10 × L (worst case)
+- Read amplification ≈ 1 + L (with Bloom filters)
+```
+
 #### Compaction Strategies
 
 | Strategy | Description | Trade-off |
@@ -264,6 +294,73 @@ flowchart TD
 | **Concurrent writes** | Limited by locking | Excellent (append-only) |
 | **Predictable latency** | More predictable | Compaction can cause spikes |
 | **Typical use cases** | OLTP, random access | Write-heavy, time-series, logs |
+
+> **Deep Dive:** For comprehensive coverage including compaction strategies, write amplification analysis, and production tuning, see [DD_STORAGE_ENGINES.md](./DD_STORAGE_ENGINES.md).
+
+### Failure Handling and Recovery
+
+Understanding how storage engines handle failures is critical for reliability.
+
+#### B-Tree Crash Recovery
+
+```mermaid
+flowchart TD
+    subgraph "B-Tree Recovery Process"
+        CRASH[System Crash] --> RESTART[Database Restart]
+        RESTART --> CHECKPOINT[Find Last Checkpoint]
+        CHECKPOINT --> WAL_SCAN[Scan WAL from Checkpoint]
+        WAL_SCAN --> REDO[Redo Committed Transactions]
+        REDO --> UNDO[Undo Uncommitted Transactions]
+        UNDO --> READY[Database Ready]
+    end
+```
+
+| Failure Type | Detection | Recovery | Data Loss Risk |
+|--------------|-----------|----------|----------------|
+| **Process crash** | Restart | WAL replay | None (if fsync enabled) |
+| **Page corruption** | Checksum mismatch | Restore from backup/replica | Minutes to hours |
+| **Disk failure** | I/O errors | Failover to replica | None (with sync replication) |
+| **Torn page** | Partial write detected | Full page writes (double-write buffer) | None |
+
+#### LSM-Tree Crash Recovery
+
+```mermaid
+flowchart TD
+    subgraph "LSM-Tree Recovery Process"
+        CRASH2[System Crash] --> RESTART2[Database Restart]
+        RESTART2 --> SSTABLE_CHECK[SSTables are immutable - intact]
+        RESTART2 --> WAL_REPLAY[Replay WAL to rebuild MemTable]
+        SSTABLE_CHECK --> READY2[Database Ready]
+        WAL_REPLAY --> READY2
+    end
+```
+
+**LSM Advantage:** SSTables are immutable and written atomically. Only the MemTable (in-memory) needs recovery from WAL.
+
+| Failure Type | Impact | Recovery |
+|--------------|--------|----------|
+| **Crash during flush** | Partial SSTable | Discard incomplete SSTable, replay WAL |
+| **Crash during compaction** | Temporary files | Delete temp files, original SSTables intact |
+| **Corruption in SSTable** | Checksum failure | Rebuild from other levels or replicas |
+
+#### Object Storage Failure Handling
+
+```mermaid
+flowchart TD
+    subgraph "S3 Reliability Patterns"
+        WRITE[Write Object] --> RETRY{Success?}
+        RETRY -->|No| BACKOFF[Exponential Backoff]
+        BACKOFF --> WRITE
+        RETRY -->|Yes| VERIFY[Verify ETag/Checksum]
+        VERIFY --> REPLICATE[S3 replicates to 3+ AZs]
+    end
+```
+
+| S3 Failure Mode | Mitigation | SLA |
+|-----------------|------------|-----|
+| **Transient errors** | Retry with exponential backoff | 99.99% availability |
+| **Data corruption** | ETag/MD5 verification | 99.999999999% durability |
+| **Region outage** | Cross-region replication | RTO varies by config |
 
 ### Decision Framework: When to Use Which
 
@@ -314,6 +411,11 @@ flowchart TB
     HASH_IDX --> HASH_USE["Exact match only,<br/>O(1) average"]
     BITMAP_IDX --> BITMAP_USE["Enum columns,<br/>boolean flags"]
     GIN_IDX --> GIN_USE["Text search,<br/>JSON containment"]
+```
+
+> **Deep Dive:** See [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) for inverted indexes, BM25 scoring, and Elasticsearch architecture.
+
+```mermaid
     GIST_IDX --> GIST_USE["PostGIS, range types,<br/>nearest neighbor"]
     BRIN_IDX --> BRIN_USE["Time-series, append-only<br/>very large tables"]
 ```
@@ -643,6 +745,128 @@ WHERE user_id = ? AND created_at > ?;
 -- ❌ Anti-pattern: Query without partition key
 SELECT * FROM orders_by_user WHERE status = 'pending';
 ```
+
+### NewSQL: Distributed SQL Databases
+
+> **References:**
+> - Corbett, J. et al. (2012). "Spanner: Google's Globally-Distributed Database." OSDI.
+> - Taft, R. et al. (2020). "CockroachDB: The Resilient Geo-Distributed SQL Database." SIGMOD.
+
+NewSQL databases combine the scalability of NoSQL with the ACID guarantees and SQL interface of traditional relational databases.
+
+#### The NewSQL Promise
+
+```mermaid
+flowchart LR
+    subgraph "Traditional Trade-off"
+        SQL["SQL/RDBMS<br/>ACID + SQL<br/>Limited scale"]
+        NoSQL["NoSQL<br/>Scalable<br/>No ACID/SQL"]
+    end
+
+    subgraph "NewSQL"
+        NEW["NewSQL<br/>ACID + SQL + Scale"]
+    end
+
+    SQL --> NEW
+    NoSQL --> NEW
+```
+
+#### Key NewSQL Systems
+
+| System | Company | Key Innovation | Consistency Model |
+|--------|---------|----------------|-------------------|
+| **Spanner** | Google | TrueTime (GPS/atomic clocks) | External consistency (strongest) |
+| **CockroachDB** | Cockroach Labs | Raft + HLC | Serializable |
+| **TiDB** | PingCAP | MySQL-compatible, Raft | Snapshot isolation |
+| **YugabyteDB** | Yugabyte | PostgreSQL-compatible | Serializable |
+| **VoltDB** | VoltDB | In-memory, partitioned | Serializable |
+
+#### Architecture Patterns
+
+**Google Spanner Architecture:**
+
+```mermaid
+flowchart TB
+    subgraph "Global Spanner Deployment"
+        subgraph "Zone A"
+            SA1[Spanserver]
+            SA2[Spanserver]
+        end
+
+        subgraph "Zone B"
+            SB1[Spanserver]
+            SB2[Spanserver]
+        end
+
+        subgraph "Zone C"
+            SC1[Spanserver]
+            SC2[Spanserver]
+        end
+
+        TT[TrueTime API<br/>GPS + Atomic Clocks]
+    end
+
+    SA1 <-->|Paxos| SB1
+    SB1 <-->|Paxos| SC1
+    SA1 --> TT
+    SB1 --> TT
+    SC1 --> TT
+```
+
+**TrueTime and Commit Wait:**
+
+```
+TrueTime API returns: [earliest, latest] time interval
+
+Commit protocol:
+1. Acquire locks
+2. Get TrueTime: t = TT.now()
+3. Assign commit timestamp: s = t.latest
+4. Wait until TT.now().earliest > s  (commit wait)
+5. Release locks and commit
+
+Result: If transaction A commits before B starts,
+        A's timestamp < B's timestamp (external consistency)
+```
+
+#### CockroachDB vs Traditional Sharding
+
+| Aspect | Manual Sharding | CockroachDB |
+|--------|-----------------|-------------|
+| **Cross-shard transactions** | Manual 2PC, complex | Automatic, transparent |
+| **Rebalancing** | Manual migration | Automatic range splits |
+| **Query routing** | Application logic | Automatic |
+| **Schema changes** | Coordinated rollout | Online DDL |
+| **Consistency** | Varies by implementation | Serializable guarantee |
+
+```sql
+-- CockroachDB: Distributed SQL with automatic sharding
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    total DECIMAL(10,2),
+    created_at TIMESTAMPTZ DEFAULT now(),
+    INDEX (user_id, created_at DESC)
+);
+
+-- This just works across regions:
+BEGIN;
+  INSERT INTO orders (user_id, total) VALUES ($1, $2);
+  UPDATE accounts SET balance = balance - $2 WHERE id = $1;
+COMMIT;
+-- Automatic distributed transaction with serializable isolation
+```
+
+#### When to Choose NewSQL
+
+| Choose NewSQL When | Choose NoSQL When | Choose Traditional SQL When |
+|--------------------|-------------------|----------------------------|
+| Need ACID + horizontal scale | Eventual consistency OK | Single-node sufficient |
+| Complex SQL queries required | Simple key-value access | Mature ecosystem needed |
+| Global distribution | Write-heavy, simple reads | Cost is primary concern |
+| Strong consistency required | Flexible schema critical | Team expertise in RDBMS |
+
+**Interview Distinction:** "NewSQL gives us the best of both worlds—SQL semantics with horizontal scalability—but at the cost of complexity and latency. Spanner achieves external consistency using TrueTime with a commit-wait period. CockroachDB uses hybrid logical clocks for similar guarantees without specialized hardware. I'd choose NewSQL when I need distributed transactions across regions with strong consistency."
 
 ---
 
@@ -981,10 +1205,10 @@ Add:
 
 | Related Topic | Connection |
 |---------------|------------|
-| [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md) | Storage engine affects consistency guarantees |
-| [Caching & Content Delivery](./04_CACHING_AND_CONTENT_DELIVERY.md) | Cache sits in front of storage layer |
-| [Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Storage engine affects replication strategy |
-| [Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md) | Storage choice determines optimization options |
+| [Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md) | Storage engine affects consistency guarantees |
+| [Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md) | Cache sits in front of storage layer |
+| [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md) | Storage engine affects replication strategy |
+| [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | Storage choice determines optimization options |
 
 ---
 
@@ -1047,8 +1271,29 @@ Add:
 
 ---
 
+## Revision History
+
+| Date | Version | Changes |
+|------|---------|---------|
+| 2025-01 | 1.0 | Initial creation with storage engines, indexing, data modeling |
+| 2025-01 | 2.0 | P2: Added NewSQL section (Spanner, CockroachDB, TiDB) |
+| 2025-01 | 2.1 | Added paper references (Bayer, O'Neil, Corbett, Taft) |
+| 2025-01 | 2.2 | Added LSM-Tree complexity analysis and amplification factors |
+| 2025-01 | 2.3 | Added failure handling section (B-Tree recovery, LSM recovery, S3 patterns) |
+
+---
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_STORAGE_ENGINES](./DD_STORAGE_ENGINES.md) | B-Tree, LSM-Tree, WAL, compaction |
+| [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) | Inverted indexes, TF-IDF, BM25, Elasticsearch |
+
+---
+
 ## Navigation
 
-**Previous:** [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Next:** [04 — Caching & Content Delivery](./04_CACHING_AND_CONTENT_DELIVERY.md)
+**Previous:** [03 — Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
+**Next:** [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md)
 **Index:** [README](./README.md)

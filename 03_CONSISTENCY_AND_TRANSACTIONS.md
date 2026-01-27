@@ -1,4 +1,4 @@
-# 02 - Consistency and Transactions
+# 03 - Consistency and Transactions
 
 ## Deep Dive into Transactional Guarantees, Isolation Levels, and Distributed Coordination
 
@@ -54,6 +54,11 @@ Distributed transactions are like coordinating multiple assembly lines to produc
 ---
 
 ## Transaction Isolation Levels
+
+> **References:**
+> - Gray, J. et al. (1976). "Granularity of Locks and Degrees of Consistency in a Shared Data Base." IBM Research.
+> - Berenson, H. et al. (1995). "A Critique of ANSI SQL Isolation Levels." ACM SIGMOD.
+> - Fekete, A. et al. (2005). "Making Snapshot Isolation Serializable." ACM TODS.
 
 ### The Anomaly Spectrum
 
@@ -350,6 +355,19 @@ flowchart TD
 
 ### Multi-Version Concurrency Control (MVCC)
 
+> **Reference:** Bernstein, P. & Goodman, N. (1983). "Multiversion Concurrency Control—Theory and Algorithms." ACM TODS.
+
+**Complexity Comparison: MVCC vs Two-Phase Locking**
+
+| Aspect | Two-Phase Locking (2PL) | MVCC |
+|--------|-------------------------|------|
+| **Read latency** | May block on write lock | Never blocks (reads snapshot) |
+| **Write latency** | Acquires locks | Creates new version |
+| **Space overhead** | Lock table O(active txns × locked rows) | Version chain O(versions × row size) |
+| **Deadlock risk** | Yes (lock cycles) | No (but write-write conflicts abort) |
+| **Long read txns** | Block writers | Don't block (but may cause version bloat) |
+| **Garbage collection** | None needed | Vacuum/purge required |
+
 **Philosophy**: "Readers never block writers. Writers never block readers."
 
 ```mermaid
@@ -502,6 +520,18 @@ flowchart TD
 
 ### Two-Phase Commit (2PC)
 
+> **Reference:** Gray, J. (1978). "Notes on Data Base Operating Systems." Operating Systems: An Advanced Course. Springer.
+
+**Complexity Analysis:**
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Message complexity** | O(3n) | Prepare + vote + commit for n participants |
+| **Time complexity** | O(2 RTT) | Prepare-vote round + commit-ack round |
+| **Space (coordinator)** | O(n) | Track participant state |
+| **Space (participant)** | O(1) | Local transaction state only |
+| **Blocking** | Yes | Participants hold locks during protocol |
+
 **The Protocol**:
 
 ```mermaid
@@ -615,6 +645,8 @@ sequenceDiagram
 ---
 
 ### Saga Pattern
+
+> **Reference:** Garcia-Molina, H. & Salem, K. (1987). "Sagas." ACM SIGMOD Conference.
 
 **Philosophy**: "If we can't have atomic distributed transactions, use a sequence of local transactions with compensating actions."
 
@@ -852,10 +884,10 @@ flowchart TD
 | Related Topic | Connection |
 |---------------|------------|
 | [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md) | Core distributed systems principles |
-| [Data Storage](./03_DATA_STORAGE_AND_ACCESS.md) | Storage engines and database selection |
-| [Distributed Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Replication, distributed transactions |
-| [Communication Patterns](./05_COMMUNICATION_PATTERNS.md) | Sagas often use message queues for coordination |
-| [Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md) | Read/write patterns affect transaction design |
+| [Communication Patterns](./02_COMMUNICATION_PATTERNS.md) | Sagas often use message queues for coordination |
+| [Data Storage](./04_DATA_STORAGE_AND_ACCESS.md) | Storage engines and database selection |
+| [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md) | Replication, distributed transactions |
+| [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | Read/write patterns affect transaction design |
 
 ---
 
@@ -908,6 +940,143 @@ flowchart TD
 
 ---
 
+## Consistency Models Deep Dive
+
+Understanding consistency models is critical for distributed systems. This section provides formal definitions and practical distinctions.
+
+### Linearizability (Strong Consistency)
+
+> **Reference:** Herlihy, M. & Wing, J. (1990). "Linearizability: A Correctness Condition for Concurrent Objects." ACM TOPLAS.
+
+**Formal Definition:** A system is linearizable if every operation appears to take effect atomically at some point between its invocation and response, and operations appear in an order consistent with real-time ordering.
+
+```mermaid
+sequenceDiagram
+    participant C1 as Client 1
+    participant S as System
+    participant C2 as Client 2
+
+    Note over S: Initial: X = 0
+
+    C1->>S: Write X = 1 (start)
+    Note over S: Linearization point
+    C1->>S: Write X = 1 (complete)
+
+    C2->>S: Read X (start)
+    Note over C2: Must see X = 1<br/>(happened after write completed)
+    S->>C2: X = 1 (complete)
+```
+
+**Key Properties:**
+1. **Recency:** Every read returns the most recent write
+2. **Real-time ordering:** If op A completes before op B starts, A appears before B
+3. **Single-copy illusion:** System behaves as if there's one copy of data
+
+**Cost of Linearizability:**
+
+| Requirement | Impact | Mitigation |
+|-------------|--------|------------|
+| **Global ordering** | Cross-datacenter latency | Single-region deployment |
+| **Synchronous replication** | Write latency penalty | Quorum writes (N/2+1) |
+| **Coordination** | Reduced throughput | Partition by key |
+
+**Production Systems:**
+- **Spanner:** Uses TrueTime for global linearizability
+- **CockroachDB:** Hybrid logical clocks with serializable transactions
+- **etcd/ZooKeeper:** Consensus-based linearizable key-value stores
+
+### Sequential Consistency vs Serializability
+
+A common source of confusion:
+
+| Property | Scope | Guarantees | Example |
+|----------|-------|------------|---------|
+| **Sequential Consistency** | All operations | Total order consistent across all processes | Memory model |
+| **Serializability** | Transactions | Transactions appear in *some* serial order | Database ACID |
+| **Linearizability** | Operations | Real-time + sequential consistency | Distributed registers |
+| **Strict Serializability** | Transactions | Serializability + real-time ordering | Spanner |
+
+```mermaid
+flowchart TD
+    subgraph "Consistency Hierarchy"
+        L[Linearizability<br/>Strongest for operations]
+        SS[Strict Serializability<br/>Linearizable transactions]
+        SER[Serializability<br/>Any equivalent serial order]
+        SEQ[Sequential Consistency<br/>Program order preserved]
+        EC[Eventual Consistency<br/>Convergence only]
+    end
+
+    L --> SS --> SER --> SEQ --> EC
+```
+
+**Interview Distinction:**
+- *Serializability* ensures transactions execute as if in *some* serial order (but order can differ from real-time)
+- *Linearizability* ensures operations respect *actual* real-time order
+- *Strict serializability* combines both: transactions in real-time order
+
+### Session Guarantees (PRAM Consistency)
+
+For client-centric consistency, we define session guarantees:
+
+| Guarantee | Definition | Example |
+|-----------|------------|---------|
+| **Read Your Writes** | A read following a write sees the write | See your own post after publishing |
+| **Monotonic Reads** | Once you read a value, you never see older values | Timeline doesn't jump backward |
+| **Monotonic Writes** | Writes by a session are seen in order | Bank transactions apply in order |
+| **Writes Follow Reads** | Write after read incorporates the read's data | Reply includes parent comment |
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S1 as Server 1
+    participant S2 as Server 2
+
+    Note over C,S2: Read Your Writes Violation
+
+    C->>S1: Write X = 5
+    S1-->>C: OK
+
+    Note over S1,S2: Replication lag...
+
+    C->>S2: Read X
+    S2-->>C: X = 0 (Should see 5!)
+
+    Note over C,S2: Solution: Sticky Sessions or Version Vectors
+```
+
+**Implementing Session Guarantees:**
+
+| Approach | Mechanism | Trade-off |
+|----------|-----------|-----------|
+| **Sticky sessions** | Route client to same replica | Reduces availability |
+| **Version vectors** | Track causality, route to up-to-date replica | Complexity |
+| **Synchronous replication** | All replicas see write | Latency |
+| **Client-side caching** | Merge local writes with reads | Stale other data |
+
+### Jepsen Testing
+
+[Jepsen](https://jepsen.io) is the industry standard for testing distributed systems consistency.
+
+**What Jepsen Tests:**
+- **Linearizability:** Operations appear atomic and ordered
+- **Read uncommitted/committed:** Isolation level enforcement
+- **Write skew:** Multi-row constraints
+- **Clock skew tolerance:** Behavior under clock drift
+
+**Notable Jepsen Findings:**
+
+| System | Finding | Year |
+|--------|---------|------|
+| **MongoDB** | Stale reads, rollback data loss | 2015, 2020 |
+| **Cassandra** | Lightweight transactions not serializable | 2020 |
+| **PostgreSQL** | Serializable snapshot isolation verified | 2020 |
+| **etcd** | Linearizable reads verified | 2020 |
+| **CockroachDB** | Serializability holds under partitions | 2017 |
+
+**Interview Reference:** "Before choosing a database for strong consistency requirements, I check its Jepsen report. Systems like etcd and CockroachDB have passed rigorous Jepsen testing for their claimed consistency guarantees."
+
+---
+
 ## Practice Questions
 
 1. **Design a seat reservation system** that prevents double-booking. What isolation level and locking strategy would you use?
@@ -922,4 +1091,17 @@ flowchart TD
 
 ---
 
-*Previous: [01 - Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md) | Next: [03 - Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md)*
+---
+
+## Revision History
+
+| Date | Version | Changes |
+|------|---------|---------|
+| 2025-01 | 1.0 | Initial creation with isolation levels, 2PC, Sagas |
+| 2025-01 | 2.0 | P1: Added linearizability formal definition, session guarantees (PRAM), Jepsen testing |
+| 2025-01 | 2.1 | Added paper references (Gray, Berenson, Garcia-Molina, Herlihy & Wing, Bernstein) |
+| 2025-01 | 2.2 | Added complexity analysis for 2PC and MVCC vs 2PL comparison |
+
+---
+
+*Previous: [02 - Communication Patterns](./02_COMMUNICATION_PATTERNS.md) | Next: [04 - Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md)*

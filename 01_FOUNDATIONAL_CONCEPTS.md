@@ -93,6 +93,101 @@ Scalability is the capability of a system to handle a growing amount of work by 
 - **Scalable:** 2x resources → 2x capacity (linear scaling)
 - **Not scalable:** 2x resources → 1.5x capacity (diminishing returns)
 
+### Scalability Laws
+
+#### Amdahl's Law — The Parallelization Limit
+
+> **Reference:** Amdahl, G. M. (1967). "Validity of the single processor approach to achieving large scale computing capabilities." AFIPS Conference Proceedings.
+
+**Principle:** The maximum speedup from parallelization is limited by the serial (non-parallelizable) portion of the workload.
+
+```
+                    1
+Speedup(N) = ─────────────────
+             S + (1 - S) / N
+
+Where:
+  N = Number of processors/nodes
+  S = Serial fraction (0 to 1)
+  (1-S) = Parallel fraction
+```
+
+**Practical Implications:**
+
+| Serial Fraction (S) | Max Speedup (N→∞) | Reality Check |
+|---------------------|-------------------|---------------|
+| 5% | 20× | Database locking, coordination |
+| 10% | 10× | Distributed transactions |
+| 25% | 4× | Heavy synchronization |
+| 50% | 2× | Serial algorithms |
+
+```mermaid
+graph LR
+    subgraph "Amdahl's Law Example: 10% Serial"
+        A["1 node: 100 units"] --> B["10 nodes: 10.5× speedup"]
+        B --> C["100 nodes: 10.9× speedup"]
+        C --> D["∞ nodes: 10× max speedup"]
+    end
+```
+
+**Interview Insight:** "No matter how many servers we add, if 10% of our workload is serial (like acquiring distributed locks), we can never exceed 10× the single-node throughput."
+
+#### Universal Scalability Law (USL) — The Real-World Limit
+
+> **Reference:** Gunther, N. J. (2007). "Guerrilla Capacity Planning." Springer. See also: [http://www.perfdynamics.com/Manifesto/USLscalability.html](http://www.perfdynamics.com/Manifesto/USLscalability.html)
+
+**Principle:** Extends Amdahl's Law to account for coordination overhead between nodes.
+
+```
+                        N
+Throughput(N) = ──────────────────────────
+                1 + σ(N-1) + κN(N-1)
+
+Where:
+  N = Number of nodes
+  σ = Contention coefficient (serialization overhead)
+  κ = Coherency coefficient (crosstalk/coordination overhead)
+```
+
+**Key Insight:** USL explains why throughput can *decrease* after adding too many nodes.
+
+```mermaid
+graph TD
+    subgraph "USL: Why More Isn't Always Better"
+        N1["1 node: 1,000 TPS"]
+        N2["4 nodes: 3,200 TPS"]
+        N3["8 nodes: 4,500 TPS"]
+        N4["16 nodes: 4,200 TPS ⚠️ Degradation"]
+        N5["32 nodes: 3,000 TPS ⚠️ Worse!"]
+
+        N1 --> N2 --> N3 --> N4 --> N5
+    end
+
+    Note["Coherency overhead (cache invalidation,<br/>distributed locks) causes N² overhead"]
+```
+
+| Component | Contention Sources (σ) | Coherency Sources (κ) |
+|-----------|------------------------|------------------------|
+| **Database** | Connection pooling, locks | Cache invalidation, replication lag |
+| **Cache** | Lock contention | Cache coherence protocols |
+| **Services** | Thread pools | Distributed consensus |
+| **Messaging** | Partition assignment | Consumer group rebalancing |
+
+**Production Example:**
+
+```
+Observed: Adding nodes beyond 12 decreased throughput
+
+Analysis:
+- Measured σ = 0.02 (2% contention)
+- Measured κ = 0.005 (0.5% coherency)
+- Optimal node count = √(1-σ)/κ = √0.98/0.005 ≈ 14 nodes
+
+Action: Cap cluster at 12-14 nodes, shard for further scaling
+```
+
+**Interview Phrase:** "Before blindly adding more nodes, I'd measure our contention and coherency coefficients. The Universal Scalability Law tells us there's an optimal cluster size, beyond which coordination overhead causes throughput to decrease."
+
 ### The Two Dimensions of Scaling
 
 ```mermaid
@@ -201,6 +296,10 @@ I'd choose **horizontal scaling** when:
 
 ## 3. Availability
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 1 — Introduction.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 3 — Embracing Risk.
+
 ### Definition
 
 Availability is the proportion of time a system is operational and accessible when needed. It's measured as a percentage of uptime over a given period.
@@ -212,6 +311,11 @@ Availability = ─────────────────
 ```
 
 ### The Nines of Availability
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 4 — Service Level Objectives.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 5 — Eliminating Toil.
+> - See also: [DD_SERVICE_LEVEL_OBJECTIVES.md](./DD_SERVICE_LEVEL_OBJECTIVES.md) for SLO/error budget deep dive.
 
 | Availability | Common Name | Downtime/Year | Downtime/Month | Downtime/Week | Typical Use Case |
 |--------------|-------------|---------------|----------------|---------------|------------------|
@@ -315,6 +419,10 @@ graph TB
 
 ## 4. Reliability
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 1 — Introduction.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 3 — Embracing Risk.
+
 ### Definition
 
 Reliability is the probability that a system will perform its intended function correctly over a specified period under stated conditions.
@@ -326,12 +434,84 @@ Reliability is the probability that a system will perform its intended function 
 | **MTBF** | Mean Time Between Failures | Average time between system failures | Total uptime / Number of failures |
 | **MTTR** | Mean Time To Recovery | Average time to restore service | Total downtime / Number of failures |
 | **MTTF** | Mean Time To Failure | For non-repairable components | Total time / Number of units |
+| **MTTD** | Mean Time To Detect | Time to discover a failure occurred | Detection time / Number of failures |
+| **MTTI** | Mean Time To Investigate | Time to identify root cause | Investigation time / Number of failures |
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 17 — Testing for Reliability.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 13 — Emergency Response.
+
+#### The Availability Formula
 
 ```
-Availability = MTBF / (MTBF + MTTR)
+                MTBF                 Uptime
+Availability = ───────────── = ─────────────────
+               MTBF + MTTR     Uptime + Downtime
 ```
 
-**Insight:** You can improve availability by either increasing MTBF (prevent failures) or decreasing MTTR (recover faster).
+**Practical Calculation Example:**
+
+```
+Scenario: Service had 3 outages last year
+- Outage 1: 2 hours
+- Outage 2: 30 minutes
+- Outage 3: 1.5 hours
+- Total uptime: 8,760 - 4 = 8,756 hours
+
+MTBF = 8,756 / 3 = 2,919 hours (122 days)
+MTTR = 4 / 3 = 1.33 hours (80 minutes)
+
+Availability = 2,919 / (2,919 + 1.33) = 99.954% (3.5 nines)
+```
+
+#### Improving Availability: Two Paths
+
+```mermaid
+flowchart TD
+    Goal[Improve Availability] --> Path1[Increase MTBF<br/>Prevent Failures]
+    Goal --> Path2[Decrease MTTR<br/>Recover Faster]
+
+    Path1 --> P1A[Redundancy]
+    Path1 --> P1B[Better testing]
+    Path1 --> P1C[Chaos engineering]
+    Path1 --> P1D[Code quality]
+
+    Path2 --> P2A[Faster detection<br/>MTTD]
+    Path2 --> P2B[Faster diagnosis<br/>MTTI]
+    Path2 --> P2C[Automated rollback]
+    Path2 --> P2D[Runbooks + training]
+
+    Note1["Often easier to reduce<br/>MTTR than increase MTBF"]
+```
+
+| Strategy | Impact on MTBF | Impact on MTTR | Investment |
+|----------|----------------|----------------|------------|
+| **Add redundancy** | 10× better | Slight improvement | High |
+| **Automated alerting** | No change | 50% faster detection | Low |
+| **Automated rollback** | No change | 80% faster recovery | Medium |
+| **Chaos engineering** | 2-3× better | Improves runbooks | Medium |
+| **On-call training** | No change | 30-50% faster | Low |
+
+**Interview Insight:** "Reducing MTTR is often more cost-effective than increasing MTBF. A 10-minute MTTR makes even frequent failures invisible to users."
+
+#### MTTR Breakdown
+
+```
+MTTR = MTTD + MTTI + MTTR_fix
+
+Where:
+  MTTD = Mean Time To Detect (monitoring latency)
+  MTTI = Mean Time To Investigate (diagnosis time)
+  MTTR_fix = Mean Time To Repair (actual fix time)
+```
+
+**Typical Distribution:**
+
+| Phase | Typical % of MTTR | Optimization |
+|-------|-------------------|--------------|
+| **Detection** | 20-30% | Better alerting, anomaly detection |
+| **Investigation** | 30-40% | Observability, runbooks, dashboards |
+| **Repair** | 30-50% | Automation, rollback capability |
 
 ### Building Reliable Systems
 
@@ -408,6 +588,9 @@ graph TD
 ### The Latency-Throughput Trade-off
 
 **System Invariant (Little's Law):**
+
+> **Reference:** Little, J. D. C. (1961). "A Proof for the Queuing Formula: L = λW." Operations Research.
+
 ```
 L = λ × W
 
@@ -504,9 +687,163 @@ graph LR
     end
 ```
 
+### Queuing Theory Fundamentals
+
+Understanding queuing theory is essential for capacity planning and latency analysis.
+
+#### The M/M/1 Queue Model
+
+The simplest queuing model for a single-server system:
+
+```
+                λ (arrival rate)
+                    ↓
+    ┌───────────────────────────────┐
+    │  Queue   →  [Server]  →  Out  │
+    └───────────────────────────────┘
+                    ↑
+              μ (service rate)
+
+Key Metrics:
+  ρ = λ/μ         (utilization, must be < 1)
+  L = ρ/(1-ρ)     (average items in system)
+  W = 1/(μ-λ)     (average time in system)
+  Wq = ρ/(μ-λ)    (average wait time in queue)
+```
+
+**Critical Insight: The Hockey Stick Curve**
+
+| Utilization (ρ) | Avg Wait Time (×service time) | Practical Impact |
+|-----------------|-------------------------------|------------------|
+| 50% | 1× | Comfortable headroom |
+| 70% | 2.3× | Acceptable for most systems |
+| 80% | 4× | Latency starting to hurt |
+| 90% | 9× | High latency, near capacity |
+| 95% | 19× | Unacceptable for user-facing |
+| 99% | 99× | System effectively unusable |
+
+```mermaid
+graph LR
+    subgraph "Utilization vs Latency (Hockey Stick)"
+        U50["50%: Low latency"]
+        U70["70%: Safe zone"]
+        U80["80%: ⚠️ Warning"]
+        U90["90%: 🔴 Critical"]
+        U95["95%: 💀 Collapse"]
+    end
+
+    U50 --> U70 --> U80 --> U90 --> U95
+```
+
+**Interview Application:** "When designing for capacity, I target 70% utilization to leave headroom for traffic spikes. At 90% utilization, latency increases 9× due to queuing effects—the system looks idle but users experience long waits."
+
+#### Practical Applications
+
+| Scenario | Application |
+|----------|-------------|
+| **Database connections** | Size connection pool for target ρ < 70% |
+| **Thread pools** | Threads = target_throughput × avg_latency × (1/target_ρ) |
+| **Load balancer health** | Alert when backend utilization > 80% |
+| **Capacity planning** | New servers needed = current_load × (1/target_ρ) |
+
+**Thread Pool Sizing Formula:**
+
+```
+                    target_throughput × avg_latency
+Optimal threads = ─────────────────────────────────
+                         target_utilization
+
+Example:
+- Target: 1,000 req/s
+- Avg latency: 100ms per request
+- Target utilization: 70%
+
+Threads = (1000 × 0.1) / 0.7 = 143 threads
+```
+
+### Tail Latency Deep Dive
+
+Tail latencies (p99, p99.9) matter more than averages in distributed systems.
+
+#### Why Tail Latencies Compound
+
+```mermaid
+flowchart LR
+    subgraph "Single Service Call"
+        S1["p99 = 100ms"]
+    end
+
+    subgraph "Fan-Out to 10 Services"
+        F1["Service 1: p99 = 100ms"]
+        F2["Service 2: p99 = 100ms"]
+        F3["..."]
+        F10["Service 10: p99 = 100ms"]
+    end
+
+    subgraph "Result"
+        R["P(all < 100ms) = 0.99¹⁰ = 90%<br/>User p99 ≈ p90 of slowest!"]
+    end
+
+    S1 --> F1
+    F1 --> F2 --> F3 --> F10 --> R
+```
+
+**The Math:**
+
+```
+For N parallel calls, each with latency percentile p:
+P(all complete within target) = p^N
+
+Example: 10 services, each p99 = 100ms
+- P(all < 100ms) = 0.99^10 = 0.904 (90.4%)
+- User experiences p99 at the slowest p90.4 ≈ p90
+
+Implication: To achieve user p99, each service needs p99.9+
+```
+
+| Fan-Out | Service p99 Needed | For User p99 |
+|---------|-------------------|--------------|
+| 2 services | p99.5 | 0.995² = 0.99 |
+| 5 services | p99.8 | 0.998⁵ = 0.99 |
+| 10 services | p99.9 | 0.999¹⁰ = 0.99 |
+| 50 services | p99.98 | 0.9998⁵⁰ = 0.99 |
+
+#### Tail Latency Causes and Mitigations
+
+| Cause | Symptom | Mitigation |
+|-------|---------|------------|
+| **GC pauses** | Periodic spikes | Tune GC, use low-pause collectors |
+| **Background tasks** | Interference with main requests | Separate thread pools |
+| **Resource contention** | Lock waiting, connection exhaustion | Bulkheading, sizing |
+| **Noisy neighbors** | Shared infrastructure variance | Dedicated resources |
+| **Cold caches** | First requests slow | Warmup, preloading |
+| **Network outliers** | Packet loss, retransmits | Hedged requests |
+
+**Hedged Requests Pattern:**
+
+```python
+# Send request to multiple replicas, use first response
+async def hedged_request(replicas, timeout_ms=10):
+    # Start primary request
+    primary = send_request(replicas[0])
+
+    # After short delay, send hedge to second replica
+    await sleep(timeout_ms)  # p50 latency of primary
+    hedge = send_request(replicas[1])
+
+    # Return whichever completes first
+    return await first_completed([primary, hedge])
+
+# Cost: ~5% extra load for dramatic p99 improvement
+```
+
+**Interview Phrase:** "Tail latencies compound with fan-out. If I have 10 downstream services each with p99 of 100ms, my user-facing p99 is determined by the slowest p90. To fix this, I'd use hedged requests, tighten individual service SLOs, or reduce fan-out."
+
 ---
 
 ## 6. CAP Theorem
+
+> **Reference:** Brewer, E. (2000). "Towards Robust Distributed Systems." PODC Keynote. Formally proved by Gilbert & Lynch (2002). "Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services." ACM SIGACT News.
 
 ### The Theorem
 
@@ -620,6 +957,8 @@ flowchart TD
 ---
 
 ## 7. PACELC Theorem
+
+> **Reference:** Abadi, D. (2012). "Consistency Tradeoffs in Modern Distributed Database System Design." IEEE Computer.
 
 ### Beyond CAP
 
@@ -933,6 +1272,10 @@ How easy is it to operate, maintain, diagnose, and update the system? Often over
 
 ### The Three Pillars of Observability
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 6 — Monitoring Distributed Systems.
+> - See also: [DD_OBSERVABILITY.md](./DD_OBSERVABILITY.md) for Four Golden Signals and monitoring deep dive.
+
 ```mermaid
 graph TD
     subgraph "Observability"
@@ -940,11 +1283,11 @@ graph TD
         M[Metrics<br/>Aggregated measurements]
         T[Traces<br/>Request flow]
     end
-    
+
     L --> Q1["What happened?<br/>Error details, stack traces"]
     M --> Q2["What's the state?<br/>QPS, latency, error rate"]
     T --> Q3["Where did time go?<br/>Service-to-service latency"]
-    
+
     L & M & T --> DIAGNOSE[Complete Picture<br/>for Diagnosis]
 ```
 
@@ -1001,21 +1344,29 @@ Before your interview, ensure you can:
 
 | Module | Connection to Foundational Concepts |
 |--------|-------------------------------------|
-| [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md) | Isolation levels, distributed transactions |
-| [03 — Data Storage](./03_DATA_STORAGE_AND_ACCESS.md) | Storage engines, indexing, data modeling |
-| [04 — Caching](./04_CACHING_AND_CONTENT_DELIVERY.md) | Latency optimization, consistency trade-offs |
-| [05 — Communication](./05_COMMUNICATION_PATTERNS.md) | APIs, messaging, real-time patterns |
-| [06 — Distributed Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | CAP/PACELC application, availability patterns |
-| [07 — Scaling](./07_SCALING_AND_INFRASTRUCTURE.md) | Horizontal scaling implementation |
-| [08 — Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md) | Read/write optimization, CQRS |
-| [09 — Quick Reference](./09_QUICK_REFERENCE.md) | Estimation formulas, decision trees |
+| [02 — Communication Patterns](./02_COMMUNICATION_PATTERNS.md) | APIs, messaging, real-time patterns |
+| [03 — Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md) | Isolation levels, distributed transactions |
+| [04 — Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md) | Storage engines, indexing, data modeling |
+| [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md) | Latency optimization, consistency trade-offs |
+| [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md) | Data distribution, sharding strategies |
+| [07 — Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md) | Consensus, leader election, distributed locks |
+| [08 — Resilience Patterns](./08_RESILIENCE_PATTERNS.md) | CAP/PACELC application, availability patterns |
+| [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | Horizontal scaling implementation |
+| [10 — Quick Reference](./10_QUICK_REFERENCE.md) | Estimation formulas, decision trees |
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_SERVICE_LEVEL_OBJECTIVES.md](./DD_SERVICE_LEVEL_OBJECTIVES.md) | SLIs, SLOs, SLAs, error budgets, availability targets |
+| [DD_OBSERVABILITY.md](./DD_OBSERVABILITY.md) | Four Golden Signals, monitoring, logging, tracing, alerting |
 
 ---
 
 ## Navigation
 
-**Next:** [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Quick Reference:** [09 — Quick Reference](./09_QUICK_REFERENCE.md)
+**Next:** [02 — Communication Patterns](./02_COMMUNICATION_PATTERNS.md)
+**Quick Reference:** [10 — Quick Reference](./10_QUICK_REFERENCE.md)
 **Index:** [README](./README.md)
 
 ---
@@ -1026,3 +1377,6 @@ Before your interview, ensure you can:
 |------|---------|---------|
 | 2025-01 | 1.0 | Initial creation |
 | 2025-01 | 2.0 | Comprehensive expansion with enhanced diagrams, interview patterns, and estimation deep-dive |
+| 2025-01 | 2.1 | P1: Added Amdahl's Law, Universal Scalability Law, enhanced MTBF/MTTR formulas |
+| 2025-01 | 2.2 | P2: Added queuing theory (M/M/1), tail latency deep dive, hedged requests pattern |
+| 2025-01 | 2.3 | Added paper references for key theorems (Amdahl, Gunther, Brewer, Abadi, Little) |

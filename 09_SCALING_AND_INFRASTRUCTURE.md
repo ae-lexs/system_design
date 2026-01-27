@@ -1,10 +1,10 @@
-# 07 — Scaling and Infrastructure
+# 09 — Scaling and Infrastructure
 
 > From single server to global scale: the architectural decisions, trade-offs, and operational patterns that enable systems to grow.
 
-**Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [04 — Caching & Content Delivery](./04_CACHING_AND_CONTENT_DELIVERY.md), [06 — Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md)
-**Builds toward:** [08 — Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md), [09 — Quick Reference](./09_QUICK_REFERENCE.md)  
-**Estimated study time:** 4-5 hours
+**Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md), [08 — Resilience Patterns](./08_RESILIENCE_PATTERNS.md)
+**Builds toward:** [10 — Quick Reference](./10_QUICK_REFERENCE.md)
+**Estimated study time:** 3-4 hours
 
 ---
 
@@ -33,8 +33,8 @@ graph TD
     
     subgraph "Operational Concerns"
         AS[Auto-Scaling]
-        RL[Rate Limiting]
         HA[High Availability]
+        CP[Capacity Planning]
     end
     
     V --> LB
@@ -44,7 +44,7 @@ graph TD
     AG --> SF
     SL --> AS
     SF --> HA
-    CDN --> RL
+    AS --> CP
 ```
 
 ---
@@ -140,6 +140,11 @@ flowchart TD
 
 ## 2. Load Balancing
 
+> **References:**
+> - Maglev (2016). "Maglev: A Fast and Reliable Software Network Load Balancer." NSDI.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 19: Load Balancing at the Frontend.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 20: Load Balancing in the Datacenter.
+
 ### What Load Balancers Do
 
 A load balancer distributes incoming traffic across multiple backend servers to:
@@ -201,6 +206,17 @@ graph TD
 | **IP Hash** | `hash(client_ip) % servers` | Session affinity needed | Uneven if IP distribution skewed |
 | **Least Response Time** | Route to fastest responding server | Latency-critical applications | Requires response time tracking |
 | **Random** | Random selection | Simple systems | Surprisingly effective at scale |
+
+### Load Balancing Algorithm Complexity
+
+| Algorithm | Time (per request) | Space | State Required |
+|-----------|-------------------|-------|----------------|
+| **Round Robin** | O(1) | O(1) | Counter |
+| **Weighted Round Robin** | O(1) | O(n) | Counter + weights |
+| **Least Connections** | O(n) or O(log n) with heap | O(n) | Connection counts |
+| **IP Hash** | O(1) | O(1) | None |
+| **Least Response Time** | O(n) | O(n) | Response times |
+| **Consistent Hashing** | O(k log n) | O(n × k) | Hash ring with k virtual nodes |
 
 ### Algorithm Selection Flowchart
 
@@ -379,6 +395,9 @@ Some use cases require stateful design:
 
 ## 4. Auto-Scaling
 
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapters on capacity planning and demand forecasting.
+
 ### Why Auto-Scaling?
 
 Manual capacity planning fails because:
@@ -493,146 +512,7 @@ flowchart TD
 
 ---
 
-## 5. Rate Limiting
-
-### Why Rate Limit?
-
-- **Prevent abuse:** Stop malicious actors from overwhelming the system
-- **Ensure fairness:** Prevent one user from consuming all resources
-- **Control costs:** Limit expensive operations
-- **Maintain SLAs:** Protect service quality for all users
-- **Compliance:** Meet contractual or legal limits
-
-### Rate Limiting Dimensions
-
-```mermaid
-flowchart TB
-    Request --> L1["Global: 10K req/s<br/>(protect infrastructure)"]
-    L1 -->|Pass| L2["Per-User: 100 req/min<br/>(fair usage)"]
-    L2 -->|Pass| L3["Per-Endpoint: 10 req/s<br/>(protect expensive ops)"]
-    L3 -->|Pass| Allow[Process Request]
-    
-    L1 -->|Fail| R1[429 Too Many Requests]
-    L2 -->|Fail| R2[429 + Retry-After]
-    L3 -->|Fail| R3[429 + Retry-After]
-```
-
-### Rate Limiting Algorithms
-
-| Algorithm | Mechanism | Burst Handling | Memory | Best For |
-|-----------|-----------|---------------|--------|----------|
-| **Fixed Window** | Count in time windows | Poor (2x at boundary) | O(1) | Simple use cases |
-| **Sliding Window Log** | Track each request timestamp | Good | O(n) | High accuracy needs |
-| **Sliding Window Counter** | Weighted window overlap | Good | O(1) | Most production use |
-| **Token Bucket** | Tokens refill at fixed rate | Excellent | O(1) | APIs with burst tolerance |
-| **Leaky Bucket** | Constant output rate queue | Smooths bursts | O(1) | Constant throughput needed |
-
-### Token Bucket Deep Dive
-
-```mermaid
-flowchart TB
-    subgraph TokenBucket["Token Bucket (capacity=10, refill=1/sec)"]
-        Bucket["Bucket<br/>Current: 7 tokens"]
-        Refill["Refill: +1 token/sec<br/>(up to capacity)"]
-    end
-    
-    Request["Incoming Request"] --> Check{Tokens ≥ 1?}
-    Check -->|Yes| Allow["Allow<br/>Tokens -= 1"]
-    Check -->|No| Reject["Reject: 429"]
-    
-    Refill --> Bucket
-```
-
-**Parameters:**
-- **Bucket size (capacity):** Maximum burst size
-- **Refill rate:** Sustained request rate
-
-**Implementation:**
-
-```python
-class TokenBucket:
-    def __init__(self, capacity: int, refill_rate: float):
-        self.capacity = capacity
-        self.refill_rate = refill_rate  # tokens per second
-        self.tokens = capacity
-        self.last_refill = time.time()
-    
-    def allow(self, tokens_needed: int = 1) -> bool:
-        now = time.time()
-        
-        # Refill tokens based on time elapsed
-        elapsed = now - self.last_refill
-        self.tokens = min(
-            self.capacity,
-            self.tokens + elapsed * self.refill_rate
-        )
-        self.last_refill = now
-        
-        # Check if we have enough tokens
-        if self.tokens >= tokens_needed:
-            self.tokens -= tokens_needed
-            return True
-        return False
-```
-
-### Distributed Rate Limiting
-
-With multiple servers, each tracking its own counts will undercount.
-
-```mermaid
-flowchart LR
-    subgraph Problem["Local Counters (Broken)"]
-        S1[Server 1<br/>Count: 30]
-        S2[Server 2<br/>Count: 40]
-        S3[Server 3<br/>Count: 35]
-        Note1["Total: 105 requests<br/>Each thinks under limit!"]
-    end
-    
-    subgraph Solution["Centralized Counter"]
-        SS1[Server 1] --> Redis[(Redis<br/>Count: 105)]
-        SS2[Server 2] --> Redis
-        SS3[Server 3] --> Redis
-    end
-```
-
-**Atomic Redis implementation:**
-
-```lua
--- Lua script for atomic rate limiting
-local key = KEYS[1]
-local limit = tonumber(ARGV[1])
-local window = tonumber(ARGV[2])
-
-local current = redis.call('INCR', key)
-if current == 1 then
-    redis.call('EXPIRE', key, window)
-end
-
-if current > limit then
-    return 0  -- Rejected
-else
-    return 1  -- Allowed
-end
-```
-
-### Rate Limiting Response Headers
-
-```http
-HTTP/1.1 200 OK
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 45
-X-RateLimit-Reset: 1640000000
-
-HTTP/1.1 429 Too Many Requests
-Retry-After: 30
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 1640000030
-```
-
----
-
-## 6. API Gateway
+## 5. API Gateway
 
 ### What an API Gateway Does
 
@@ -738,7 +618,7 @@ sequenceDiagram
 
 ---
 
-## 7. Content Delivery Networks (CDN)
+## 6. Content Delivery Networks (CDN)
 
 ### What a CDN Does
 
@@ -829,7 +709,7 @@ Vary: Accept-Encoding
 
 ---
 
-## 8. Serverless vs. Traditional Architecture
+## 7. Serverless vs. Traditional Architecture
 
 ### Architecture Comparison
 
@@ -918,7 +798,11 @@ flowchart TB
 
 ---
 
-## 9. High Availability Patterns
+## 8. High Availability Patterns
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 3: Embracing Risk.
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapter 23: Managing Critical State.
 
 ### Availability Targets
 
@@ -1007,7 +891,10 @@ flowchart TD
 
 ---
 
-## 10. Capacity Planning
+## 9. Capacity Planning
+
+> **References:**
+> - Beyer, B. et al. (2016). "Site Reliability Engineering." O'Reilly. Chapters on capacity planning and provisioning.
 
 ### Estimation Framework
 
@@ -1061,7 +948,7 @@ Sizing:
 
 ---
 
-## 11. Chapter Summary
+## 10. Chapter Summary
 
 ### Key Concepts
 
@@ -1072,7 +959,7 @@ Sizing:
 | **Stateless design** | Externalize all state, any instance handles any request |
 | **Load balancing** | Distribute traffic across servers |
 | **Auto-scaling** | Automatically adjust capacity based on demand |
-| **Rate limiting** | Control request rate to protect system |
+| **Rate limiting** | Control request rate to protect system (see [08 — Resilience Patterns](./08_RESILIENCE_PATTERNS.md)) |
 | **API Gateway** | Centralized API management (auth, routing, transform) |
 | **CDN** | Edge caching for latency and origin offload |
 
@@ -1095,7 +982,7 @@ Sizing:
 │   • Need affinity → IP Hash                                     │
 │   • L4 for speed, L7 for content-aware routing                  │
 ├─────────────────────────────────────────────────────────────────┤
-│ RATE LIMITING:                                                  │
+│ RATE LIMITING: (see 08 — Resilience Patterns)                   │
 │   • Token bucket: allows bursts, configurable                   │
 │   • Sliding window: good accuracy, common choice                │
 │   • Distribute via Redis for multi-server                       │
@@ -1132,8 +1019,24 @@ Sizing:
 
 ---
 
+## Revision History
+
+| Date | Change |
+|------|--------|
+| 2025-01 | Initial document with scaling, load balancing, rate limiting, HA patterns |
+| 2025-01 | Quality review: Added paper references (Maglev 2016, SRE book), complexity tables for load balancing and rate limiting algorithms |
+
+---
+
+## Connections
+
+- [DD — Service Level Objectives](./DD_SERVICE_LEVEL_OBJECTIVES.md) — for availability targets and SLO/SLI definitions
+- [DD — Observability](./DD_OBSERVABILITY.md) — for monitoring auto-scaling decisions and system health
+
+---
+
 ## Navigation
 
-**Previous:** [06 — Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md)
-**Next:** [08 — Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md)
+**Previous:** [08 — Resilience Patterns](./08_RESILIENCE_PATTERNS.md)
+**Next:** [10 — Quick Reference](./10_QUICK_REFERENCE.md)
 **Index:** [README](./README.md)

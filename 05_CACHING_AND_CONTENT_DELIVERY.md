@@ -1,9 +1,9 @@
-# 04 — Caching and Content Delivery
+# 05 — Caching and Content Delivery
 
 > "The most effective way to improve performance is to avoid doing work—caching stores the results of expensive operations for reuse."
 
-**Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [03 — Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md)
-**Builds toward:** [06 — Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md), [07 — Scaling & Infrastructure](./07_SCALING_AND_INFRASTRUCTURE.md)  
+**Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [04 — Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md)
+**Builds toward:** [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md), [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
 **Estimated study time:** 3-4 hours
 
 ---
@@ -599,6 +599,8 @@ def get_user(user_id: str) -> User:
 - **Redis:** Need data structures, persistence, pub/sub, atomic operations
 - **Memcached:** Pure caching, maximum simplicity, multi-threaded performance
 
+> **Deep Dive:** See [DD_REDIS_INTERNALS](./DD_REDIS_INTERNALS.md) for data structures, clustering, persistence mechanisms, and distributed locking.
+
 ### Cache Cluster Architectures
 
 ```mermaid
@@ -871,6 +873,10 @@ def get_response_headers(resource_type: str) -> dict:
 
 When cache is full, which item should be removed?
 
+> **References:**
+> - Belady, L. A. (1966). "A Study of Replacement Algorithms for a Virtual-Storage Computer." IBM Systems Journal.
+> - Megiddo, N. & Modha, D. S. (2003). "ARC: A Self-Tuning, Low Overhead Replacement Cache." USENIX FAST.
+
 ### Common Eviction Policies
 
 | Policy | Rule | Pros | Cons |
@@ -880,6 +886,18 @@ When cache is full, which item should be removed?
 | **FIFO** | Remove oldest added | Simple, predictable | Ignores access patterns |
 | **Random** | Remove random item | Simple, no overhead | May evict hot items |
 | **TTL** | Remove expired items | Time-based freshness | Doesn't help when full |
+
+### Eviction Policy Complexity Analysis
+
+| Policy | Get | Put | Evict | Space Overhead | Implementation |
+|--------|-----|-----|-------|----------------|----------------|
+| **LRU** | O(1) | O(1) | O(1) | O(n) pointers | HashMap + Doubly Linked List |
+| **LFU** | O(1)* | O(1)* | O(1)* | O(n) counters + buckets | HashMap + Frequency Buckets |
+| **FIFO** | O(1) | O(1) | O(1) | O(n) queue | HashMap + Queue |
+| **Random** | O(1) | O(1) | O(1) | None | HashMap only |
+| **ARC** | O(1) | O(1) | O(1) | O(2n) lists | Two LRU lists + ghost entries |
+
+*LFU O(1) requires careful implementation with frequency buckets; naive implementation is O(log n).
 
 ### LRU (Least Recently Used)
 
@@ -958,9 +976,165 @@ flowchart TD
     MEM -->|No| FULL[Full LRU]
 ```
 
+### Cache Hit Rate Analysis
+
+Understanding cache hit rates is essential for capacity planning and performance optimization.
+
+#### Hit Rate Formulas
+
+```
+                     cache_hits
+Hit Rate (h) = ──────────────────────
+               cache_hits + cache_misses
+
+Miss Rate = 1 - Hit Rate
+
+Effective Latency = h × cache_latency + (1-h) × origin_latency
+```
+
+**Example Calculation:**
+
+```
+Scenario:
+- Cache hit latency: 5ms
+- Origin latency: 100ms
+- Hit rate: 90%
+
+Effective Latency = 0.90 × 5ms + 0.10 × 100ms
+                  = 4.5ms + 10ms
+                  = 14.5ms
+
+Compare to no cache: 100ms → 85% latency reduction
+```
+
+#### Hit Rate vs Cache Size (Zipf Distribution)
+
+> **Reference:** Breslau, L. et al. (1999). "Web Caching and Zipf-like Distributions: Evidence and Implications." IEEE INFOCOM.
+
+Most real workloads follow a Zipf distribution (power law)—a small fraction of items receive most accesses.
+
+```mermaid
+flowchart LR
+    subgraph "Zipf Distribution: 80/20 Rule"
+        C10["10% cache<br/>~65% hit rate"]
+        C20["20% cache<br/>~80% hit rate"]
+        C50["50% cache<br/>~95% hit rate"]
+        C100["100% cache<br/>100% hit rate"]
+    end
+
+    C10 --> C20 --> C50 --> C100
+```
+
+**Zipf Hit Rate Approximation:**
+
+```
+For Zipf parameter α ≈ 1 (typical web traffic):
+
+Hit Rate ≈ cache_size^(1-1/α) / total_items^(1-1/α)
+
+Simplified for α = 1:
+Hit Rate ≈ log(cache_size) / log(total_items)
+
+Example:
+- Total items: 1,000,000
+- Cache size: 10,000 (1%)
+- Hit rate ≈ log(10000)/log(1000000) ≈ 4/6 ≈ 67%
+```
+
+| Cache Size (% of total) | Expected Hit Rate | Use Case |
+|-------------------------|-------------------|----------|
+| 1% | ~50-60% | Cost-constrained |
+| 5% | ~70-80% | Typical production |
+| 10% | ~80-85% | Performance-focused |
+| 20% | ~90-95% | Low-latency critical |
+
+### Cache Sizing Methodology
+
+#### Working Set Analysis
+
+```mermaid
+flowchart TD
+    subgraph "Cache Sizing Process"
+        A[Identify working set] --> B[Measure access frequency]
+        B --> C[Calculate memory per item]
+        C --> D[Apply target hit rate]
+        D --> E[Add overhead buffer]
+    end
+```
+
+**Step-by-Step Sizing:**
+
+```
+1. IDENTIFY WORKING SET
+   - Analyze access logs for unique keys per time window
+   - Example: 500K unique users/hour, 10K unique products/minute
+
+2. CALCULATE MEMORY REQUIREMENTS
+   Per-item memory = serialized_size + key_overhead + metadata
+
+   Example:
+   - User session: 2KB data + 64B key + 100B metadata = ~2.2KB
+   - 500K users × 2.2KB = 1.1GB base
+
+3. APPLY HIT RATE TARGET
+   For 95% hit rate with Zipf distribution:
+   Cache size ≈ 20-30% of total working set
+
+   1.1GB × 0.25 = 275MB minimum
+
+4. ADD OVERHEAD
+   - Eviction overhead: +10%
+   - Fragmentation: +15%
+   - Growth buffer: +20%
+
+   275MB × 1.45 = ~400MB recommended
+```
+
+#### Redis Memory Calculation
+
+```python
+def estimate_redis_memory(
+    num_items: int,
+    avg_key_size: int,
+    avg_value_size: int,
+    overhead_factor: float = 1.5  # Redis overhead
+) -> int:
+    """Estimate Redis memory requirements."""
+    # Redis string overhead: ~90 bytes for small values
+    per_item = avg_key_size + avg_value_size + 90
+
+    # Hash table overhead
+    base_memory = num_items * per_item
+
+    # Apply overhead factor (fragmentation, dict resizing)
+    return int(base_memory * overhead_factor)
+
+# Example
+memory = estimate_redis_memory(
+    num_items=1_000_000,
+    avg_key_size=32,
+    avg_value_size=256
+)
+# Result: ~567MB
+```
+
+#### Cache Sizing Decision Matrix
+
+| Factor | Small Cache | Large Cache |
+|--------|-------------|-------------|
+| **Hit rate** | Lower (50-70%) | Higher (90-99%) |
+| **Memory cost** | Lower | Higher |
+| **Eviction rate** | High (more churn) | Low (stable) |
+| **Cold start impact** | Quick warmup | Slow warmup |
+| **Best for** | Cost-sensitive, simple data | Latency-critical, complex data |
+
+**Interview Phrase:** "I'd size the cache based on working set analysis. For a Zipf-distributed workload, caching 10-20% of the working set typically yields 80-90% hit rates due to the power-law distribution. I'd measure the actual hit rate and adjust—oversizing wastes memory, undersizing wastes origin capacity."
+
 ---
 
 ## 8. Bloom Filters
+
+> **Reference:** Bloom, B. H. (1970). "Space/Time Trade-offs in Hash Coding with Allowable Errors." Communications of the ACM.
 
 ### The Problem
 
@@ -981,6 +1155,21 @@ A **space-efficient probabilistic data structure** for set membership testing.
 - **Cannot enumerate:** Can't list what's in the set
 - **Cannot delete:** (standard version; Counting Bloom Filters can)
 - **Fixed size:** Doesn't grow with number of items
+
+### Bloom Filter Complexity Analysis
+
+| Operation | Time Complexity | Space Complexity | Notes |
+|-----------|-----------------|------------------|-------|
+| **Insert** | O(k) | — | k hash computations |
+| **Query** | O(k) | — | k hash lookups |
+| **Space** | — | O(m) bits | m = -n×ln(p)/(ln2)² for FP rate p |
+| **Union** | O(m) | O(m) | Bitwise OR of two filters |
+
+Where: n = expected items, m = bit array size, k = hash functions, p = false positive rate.
+
+**Optimal Parameters:**
+- Optimal k = (m/n) × ln(2) ≈ 0.693 × (m/n)
+- For 1% FP rate: m/n ≈ 9.6 bits per item, k ≈ 7
 
 ### How It Works
 
@@ -1475,15 +1664,31 @@ Add:
 |---------------|------------|
 | [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md) | Caching inherently introduces eventual consistency |
 | [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md) | Latency/throughput fundamentals |
-| [Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Cache replication for high availability |
-| [Communication Patterns](./05_COMMUNICATION_PATTERNS.md) | Cache invalidation can trigger real-time updates |
-| [Scaling & Infrastructure](./07_SCALING_AND_INFRASTRUCTURE.md) | CDN and caching are key traffic management tools |
-| [Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md) | Caching is the primary read optimization strategy |
+| [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md) | Cache replication for high availability |
+| [Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md) | Coordination patterns for distributed caches |
+| [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | CDN and caching are key traffic management tools |
+| [Quick Reference](./10_QUICK_REFERENCE.md) | Caching quick reference and cheat sheets |
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_REDIS_INTERNALS](./DD_REDIS_INTERNALS.md) | Data structures with complexity, Sentinel, Cluster, persistence, Redlock |
+
+---
+
+## Revision History
+
+| Date | Change |
+|------|--------|
+| 2025-01 | Initial document with caching strategies, CDN, HTTP caching |
+| 2025-01 | P2 enhancement: Added Zipf distribution, cache sizing formulas |
+| 2025-01 | Quality review: Added paper references (Bloom 1970, Belady 1966, Breslau 1999), complexity analysis tables for eviction policies and Bloom filters |
 
 ---
 
 ## Navigation
 
-**Previous:** [03 — Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md)
-**Next:** [05 — Communication Patterns](./05_COMMUNICATION_PATTERNS.md)
+**Previous:** [04 — Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md)
+**Next:** [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md)
 **Index:** [README](./README.md)

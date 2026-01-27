@@ -1,4 +1,4 @@
-# 05 - Communication Patterns: Synchronous, Asynchronous, and Real-Time
+# 02 - Communication Patterns: Synchronous, Asynchronous, and Real-Time
 
 ## Overview
 
@@ -86,6 +86,8 @@ flowchart TB
 ```
 
 #### REST (Representational State Transfer)
+
+> **Reference:** Fielding, R. T. (2000). "Architectural Styles and the Design of Network-based Software Architectures." Doctoral dissertation, UC Irvine.
 
 **Philosophy:** Everything is a resource addressable by URL. HTTP verbs define operations.
 
@@ -344,6 +346,155 @@ sequenceDiagram
 | **Overfetching** | Common | Unlikely | Solved |
 | **Performance** | Good | Excellent | Good |
 
+### Protocol Performance Benchmarks
+
+Typical latency and throughput measurements (single request, same datacenter):
+
+| Protocol | Serialization | Latency (p50) | Latency (p99) | Throughput | Payload Overhead |
+|----------|---------------|---------------|---------------|------------|------------------|
+| **REST/JSON** | JSON (text) | 1-5 ms | 10-50 ms | 10-50K req/s | High (verbose) |
+| **gRPC/Protobuf** | Protobuf (binary) | 0.1-1 ms | 2-10 ms | 100-500K req/s | Low (compact) |
+| **GraphQL/JSON** | JSON (text) | 2-10 ms | 20-100 ms | 5-20K req/s | Variable |
+
+**Serialization Comparison:**
+
+| Format | Encode Time | Decode Time | Size (1KB object) | Human Readable |
+|--------|-------------|-------------|-------------------|----------------|
+| **JSON** | 1x (baseline) | 1x | 100% | Yes |
+| **Protobuf** | 2-5x faster | 2-5x faster | 30-50% | No |
+| **MessagePack** | 1.5-2x faster | 1.5-2x faster | 50-70% | No |
+| **Avro** | 2-3x faster | 2-3x faster | 30-40% | No (schema) |
+
+---
+
+### HTTP Protocol Evolution
+
+> **References:**
+> - Belshe, M. et al. (2015). "Hypertext Transfer Protocol Version 2 (HTTP/2)." RFC 7540.
+> - Iyengar, J. & Thomson, M. (2021). "QUIC: A UDP-Based Multiplexed and Secure Transport." RFC 9000.
+
+Understanding the evolution of HTTP helps explain why modern systems make certain transport choices.
+
+#### HTTP/1.1 → HTTP/2 → HTTP/3 (QUIC)
+
+```mermaid
+flowchart LR
+    subgraph "HTTP/1.1 (1997)"
+        H1[Text-based<br/>One request per connection<br/>Head-of-line blocking]
+    end
+
+    subgraph "HTTP/2 (2015)"
+        H2[Binary framing<br/>Multiplexing<br/>Header compression<br/>Still TCP-based]
+    end
+
+    subgraph "HTTP/3 (2022)"
+        H3[QUIC transport<br/>UDP-based<br/>0-RTT connection<br/>Stream-level recovery]
+    end
+
+    H1 -->|"Persistent connections<br/>pipelining failed"| H2
+    H2 -->|"TCP head-of-line<br/>blocking remains"| H3
+```
+
+#### The TCP Head-of-Line Blocking Problem
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant TCP as TCP Connection
+    participant Server
+
+    Note over TCP: HTTP/2 multiplexes streams over single TCP
+
+    Client->>TCP: Stream 1: Request A
+    Client->>TCP: Stream 2: Request B
+    Client->>TCP: Stream 3: Request C
+
+    TCP->>Server: Packet 1 (Stream 1)
+    Note over TCP: Packet 2 lost!
+    TCP->>Server: Packet 3 (Stream 3)
+
+    Note over TCP: TCP blocks ALL streams<br/>waiting for Packet 2 retransmit
+    Note over Client,Server: Stream 3 data arrived but<br/>can't be delivered to app
+
+    TCP->>Server: Packet 2 (retransmit)
+    Note over TCP: Now all streams unblocked
+```
+
+**HTTP/2 Problem:** Single TCP connection means single stream of bytes. One lost packet blocks all HTTP streams.
+
+#### QUIC: HTTP/3's Transport
+
+```mermaid
+flowchart TB
+    subgraph "Traditional Stack"
+        T_APP[Application: HTTP/2]
+        T_TLS[TLS 1.2/1.3]
+        T_TCP[TCP]
+        T_IP[IP]
+    end
+
+    subgraph "QUIC Stack"
+        Q_APP[Application: HTTP/3]
+        Q_QUIC[QUIC<br/>+ TLS 1.3 built-in<br/>+ Streams<br/>+ Reliability]
+        Q_UDP[UDP]
+        Q_IP[IP]
+    end
+
+    T_APP --> T_TLS --> T_TCP --> T_IP
+    Q_APP --> Q_QUIC --> Q_UDP --> Q_IP
+```
+
+**QUIC Benefits:**
+
+| Feature | TCP/TLS | QUIC | Impact |
+|---------|---------|------|--------|
+| **Connection setup** | 2-3 RTT (TCP + TLS) | 0-1 RTT | Faster first byte |
+| **Head-of-line blocking** | All streams blocked | Per-stream recovery | Better multiplexing |
+| **Connection migration** | Breaks on IP change | Connection ID survives | Mobile-friendly |
+| **Encryption** | Optional (TLS layer) | Mandatory, built-in | Always secure |
+| **Congestion control** | Kernel-space, slow to evolve | User-space, pluggable | Faster innovation |
+
+#### 0-RTT Connection Establishment
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+
+    Note over Client,Server: First connection (1-RTT)
+    Client->>Server: ClientHello + transport params
+    Server->>Client: ServerHello + cert + config token
+    Note over Client: Client stores server config
+
+    Note over Client,Server: Subsequent connection (0-RTT)
+    Client->>Server: ClientHello + early data + HTTP request
+    Server->>Client: Response (immediate!)
+    Note over Client,Server: Request sent before handshake completes
+```
+
+**0-RTT Caveat:** Early data can be replayed. Only safe for idempotent requests (GET, not POST with side effects).
+
+#### When to Use HTTP/3
+
+| Use HTTP/3 When | Stick with HTTP/2 When |
+|-----------------|------------------------|
+| High-latency networks (mobile, satellite) | Stable, low-latency connections |
+| Users frequently change networks | UDP is blocked (some corporate networks) |
+| Many small requests (multiplexing matters) | Need mature tooling/debugging |
+| Global user base with varied connectivity | Legacy infrastructure constraints |
+
+**Production Adoption:**
+
+| Service | HTTP/3 Status | Notes |
+|---------|---------------|-------|
+| **Google** | Default | Chrome + Google services |
+| **Cloudflare** | Available | Edge network support |
+| **AWS CloudFront** | Available | CDN support |
+| **Facebook** | Partial | Mobile apps |
+| **Netflix** | Testing | Streaming optimization |
+
+**Interview Phrase:** "HTTP/3 with QUIC solves TCP's head-of-line blocking by running over UDP with independent streams. This is particularly valuable for mobile users—QUIC connections survive network switches via connection IDs, and 0-RTT resumption reduces latency. The trade-off is less mature tooling and potential UDP blocking in some networks."
+
 ---
 
 ### Synchronous Decision Tree
@@ -513,6 +664,10 @@ flowchart TD
 ---
 
 ### Apache Kafka Deep Dive
+
+> **Reference:** Kreps, J. et al. (2011). "Kafka: A Distributed Messaging System for Log Processing." NetDB Workshop.
+
+> **Deep Dive:** See [DD_KAFKA_ARCHITECTURE](./DD_KAFKA_ARCHITECTURE.md) for partitions, consumer groups, exactly-once semantics, and production patterns.
 
 ```mermaid
 flowchart TB
@@ -1411,11 +1566,17 @@ flowchart TB
 
 | Related Topic | Connection |
 |---------------|------------|
-| [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md) | Async messaging implies eventual consistency |
+| [Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md) | Async messaging implies eventual consistency |
 | [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md) | Sync optimizes latency, async optimizes throughput |
-| [Caching & Content Delivery](./04_CACHING_AND_CONTENT_DELIVERY.md) | REST enables HTTP caching; invalidation via events |
-| [Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Events can trigger replication |
-| [Scaling & Infrastructure](./07_SCALING_AND_INFRASTRUCTURE.md) | API Gateway handles rate limiting, circuit breaking |
+| [Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md) | REST enables HTTP caching; invalidation via events |
+| [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md) | Events can trigger replication |
+| [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md) | API Gateway handles rate limiting, circuit breaking |
+
+## Connections to Deep Dives
+
+| Deep Dive | Topics Covered |
+|-----------|----------------|
+| [DD_KAFKA_ARCHITECTURE](./DD_KAFKA_ARCHITECTURE.md) | Partitions, consumer groups, ISR replication, exactly-once semantics |
 
 ---
 
@@ -1433,8 +1594,18 @@ flowchart TB
 
 ---
 
+## Revision History
+
+| Date | Change |
+|------|--------|
+| 2025-01 | Initial document with sync/async/real-time patterns |
+| 2025-01 | P2 enhancement: Added HTTP/3 and QUIC protocol section |
+| 2025-01 | Quality review: Added paper references (Fielding 2000, RFC 9000, Kreps 2011), protocol performance benchmarks |
+
+---
+
 ## Navigation
 
-**Previous:** [04 - Caching & Content Delivery](./04_CACHING_AND_CONTENT_DELIVERY.md)
-**Next:** [06 - Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md)
+**Previous:** [01 - Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md)
+**Next:** [03 - Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
 **Index:** [README](./README.md)
