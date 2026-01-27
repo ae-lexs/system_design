@@ -295,7 +295,7 @@ flowchart TD
 | **Predictable latency** | More predictable | Compaction can cause spikes |
 | **Typical use cases** | OLTP, random access | Write-heavy, time-series, logs |
 
-> **Deep Dive:** For comprehensive coverage including compaction strategies, write amplification analysis, and production tuning, see [STORAGE_ENGINES.md](./STORAGE_ENGINES.md).
+> **Deep Dive:** For comprehensive coverage including compaction strategies, write amplification analysis, and production tuning, see [DD_STORAGE_ENGINES.md](./DD_STORAGE_ENGINES.md).
 
 ### Failure Handling and Recovery
 

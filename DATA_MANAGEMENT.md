@@ -4,9 +4,9 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md)
 **Deep-Dives:**
-- [Sharding & Partitioning](./SHARDING_PARTITIONING.md)
-- [Storage Engines](./STORAGE_ENGINES.md)
-- [Consistent Hashing](./CONSISTENT_HASHING_DEEP_DIVE.md)
+- [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
+- [Storage Engines](./DD_STORAGE_ENGINES.md)
+- [Consistent Hashing](./DD_CONSISTENT_HASHING.md)
 - [Indexing Strategies](./03_DATA_STORAGE_AND_ACCESS.md#2-indexing-deep-dive)
 - [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
 
@@ -159,7 +159,7 @@ The storage engine determines how data is physically stored and retrieved. This 
 - **Time-series data**: LSM-tree with compaction matches access patterns
 - **Mixed workload**: B-tree is safer default; tune buffer pool
 
-**Deep-Dive:** [Storage Engines](./STORAGE_ENGINES.md) covers B-tree mechanics, LSM compaction strategies, WAL durability, Bloom filters, and write amplification analysis.
+**Deep-Dive:** [Storage Engines](./DD_STORAGE_ENGINES.md) covers B-tree mechanics, LSM compaction strategies, WAL durability, Bloom filters, and write amplification analysis.
 
 ---
 
@@ -378,7 +378,7 @@ flowchart TB
 | SQL vs NoSQL | Structured + transactions? | Yes → SQL. Flexible + scale? → NoSQL | This doc §2 |
 | Storage Engine | Read or write heavy? | Read → B-Tree. Write → LSM | [Storage Engines](./03_DATA_STORAGE_AND_ACCESS.md#1-storage-engine-fundamentals) |
 | Indexing | What's in WHERE clause? | Index it, but judiciously | [Indexing](./03_DATA_STORAGE_AND_ACCESS.md#2-indexing-deep-dive) |
-| Partitioning | Single node enough? | No → Shard by high-cardinality key | [Sharding](./SHARDING_PARTITIONING.md) |
+| Partitioning | Single node enough? | No → Shard by high-cardinality key | [Sharding](./DD_SHARDING_PARTITIONING.md) |
 | Replication | Need HA or read scale? | HA → Multi-node. Reads → Replicas | [Replication](./REPLICATION_PATTERNS.md) |
 | Normalization | Read-heavy or write-heavy? | Read → Denormalize. Write → Normalize | This doc §7 |
 | Federation | Clear domain boundaries? | Yes → Federate. No → Shard | This doc §8 |

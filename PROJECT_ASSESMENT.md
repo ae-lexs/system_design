@@ -53,12 +53,12 @@ Each document is evaluated against these six dimensions:
 | Document | Size | Rating | Notes |
 |----------|------|--------|-------|
 | DATA_MANAGEMENT.md (Hub) | ~8.5K | ⭐⭐⭐⭐⭐ | Hub document with decision frameworks |
-| SHARDING_PARTITIONING.md | ~25K | ⭐⭐⭐⭐⭐ | Full ADR-style with complexity analysis |
-| CONSISTENT_HASHING_DEEP_DIVE.md | ~20K | ⭐⭐⭐⭐⭐ | 5 algorithms, math proofs, production examples |
-| STORAGE_ENGINES.md | ~22K | ⭐⭐⭐⭐⭐ | B-Tree, LSM, WAL, Bloom filters, amplification |
-| DYNAMO_ARCHITECTURE.md | ~24K | ⭐⭐⭐⭐⭐ | Complete paper treatment with code |
-| CONSENSUS_PROTOCOLS.md | ~28K | ⭐⭐⭐⭐⭐ | Paxos, Raft, Zab with full detail |
-| CLOCK_SYNCHRONIZATION.md | ~22K | ⭐⭐⭐⭐⭐ | NTP, Lamport, Vector, HLC, TrueTime |
+| DD_SHARDING_PARTITIONING.md | ~25K | ⭐⭐⭐⭐⭐ | Full ADR-style with complexity analysis |
+| DD_CONSISTENT_HASHING.md | ~20K | ⭐⭐⭐⭐⭐ | 5 algorithms, math proofs, production examples |
+| DD_STORAGE_ENGINES.md | ~22K | ⭐⭐⭐⭐⭐ | B-Tree, LSM, WAL, Bloom filters, amplification |
+| DD_DYNAMO_ARCHITECTURE.md | ~24K | ⭐⭐⭐⭐⭐ | Complete paper treatment with code |
+| DD_CONSENSUS_PROTOCOLS.md | ~28K | ⭐⭐⭐⭐⭐ | Paxos, Raft, Zab with full detail |
+| DD_CLOCK_SYNCHRONIZATION.md | ~22K | ⭐⭐⭐⭐⭐ | NTP, Lamport, Vector, HLC, TrueTime |
 
 ---
 
@@ -79,9 +79,9 @@ All P0 critical gaps have been addressed with new deep-dive documents.
 
 **Resolution:**
 - ✅ Created **DATA_MANAGEMENT.md** as hub document (~8.5K)
-- ✅ Created **SHARDING_PARTITIONING.md** deep-dive (~25K) with O() complexity for all strategies
-- ✅ Created **STORAGE_ENGINES.md** (~22K) with B-tree/LSM detail, write amplification analysis
-- ✅ Created **CONSISTENT_HASHING_DEEP_DIVE.md** (~20K) with mathematical proofs
+- ✅ Created **DD_SHARDING_PARTITIONING.md** deep-dive (~25K) with O() complexity for all strategies
+- ✅ Created **DD_STORAGE_ENGINES.md** (~22K) with B-tree/LSM detail, write amplification analysis
+- ✅ Created **DD_CONSISTENT_HASHING.md** (~20K) with mathematical proofs
 
 ---
 
@@ -93,8 +93,8 @@ All P0 critical gaps have been addressed with new deep-dive documents.
 | **Status** | Critical gaps | Deep-dives extracted |
 
 **Resolution:**
-- ✅ Created **CONSISTENT_HASHING_DEEP_DIVE.md** with K/N proof, jump hash, HRW, Maglev, bounded load
-- ✅ Created **DYNAMO_ARCHITECTURE.md** with gossip protocol detail
+- ✅ Created **DD_CONSISTENT_HASHING.md** with K/N proof, jump hash, HRW, Maglev, bounded load
+- ✅ Created **DD_DYNAMO_ARCHITECTURE.md** with gossip protocol detail
 - ✅ Gossip protocols detailed in Dynamo doc; standalone GOSSIP_PROTOCOLS.md planned for future
 
 ---
@@ -107,8 +107,8 @@ All P0 critical gaps have been addressed with new deep-dive documents.
 | **Status** | Critical gaps | Deep-dives extracted |
 
 **Resolution:**
-- ✅ Created **CONSENSUS_PROTOCOLS.md** (~28K) with full Paxos phases, Multi-Paxos, Raft detail, Zab, safety proofs
-- ✅ Created **CLOCK_SYNCHRONIZATION.md** (~22K) with Lamport, vector clocks, HLC, TrueTime
+- ✅ Created **DD_CONSENSUS_PROTOCOLS.md** (~28K) with full Paxos phases, Multi-Paxos, Raft detail, Zab, safety proofs
+- ✅ Created **DD_CLOCK_SYNCHRONIZATION.md** (~22K) with Lamport, vector clocks, HLC, TrueTime
 
 ---
 
@@ -160,7 +160,7 @@ All P1 documents have received significant enhancements.
 **Enhancements Made:**
 - ✅ Added **Replication Patterns** section with Primary-Backup overview
 - ✅ Added **Chain Replication** with full mechanics, failure scenarios, comparison table
-- ✅ Added link to **DYNAMO_ARCHITECTURE.md** for advanced replication patterns
+- ✅ Added link to **DD_DYNAMO_ARCHITECTURE.md** for advanced replication patterns
 - ✅ CRDT reference for conflict-free alternatives
 
 ---
@@ -215,7 +215,7 @@ All P2 documents have received targeted enhancements.
 | Before | After | Enhancement |
 |--------|-------|-------------|
 | SQL/NoSQL only | NewSQL section added | Spanner, CockroachDB, TiDB comparison |
-| No deep-dive link | STORAGE_ENGINES.md link | Cross-reference for write amplification |
+| No deep-dive link | DD_STORAGE_ENGINES.md link | Cross-reference for write amplification |
 
 ---
 
@@ -287,8 +287,8 @@ All P3 documents have been updated with final polish.
 | Document | Before | After | Resolution |
 |----------|--------|-------|------------|
 | DATA_MANAGEMENT.md | ⭐⭐ | ⭐⭐⭐⭐⭐ | Restructured as hub + created 3 deep-dives |
-| DISTRIBUTED_SYSTEM_PATTERNS.md | ⭐⭐ | ⭐⭐⭐ | Linked to CONSISTENT_HASHING_DEEP_DIVE.md, DYNAMO_ARCHITECTURE.md |
-| CONSISTENCY_AND_CONCENSUS.md | ⭐⭐ | ⭐⭐⭐ | Linked to CONSENSUS_PROTOCOLS.md, CLOCK_SYNCHRONIZATION.md |
+| DISTRIBUTED_SYSTEM_PATTERNS.md | ⭐⭐ | ⭐⭐⭐ | Linked to DD_CONSISTENT_HASHING.md, DD_DYNAMO_ARCHITECTURE.md |
+| CONSISTENCY_AND_CONCENSUS.md | ⭐⭐ | ⭐⭐⭐ | Linked to DD_CONSENSUS_PROTOCOLS.md, DD_CLOCK_SYNCHRONIZATION.md |
 
 ### 🟠 P1 — Important — ✅ ALL RESOLVED
 

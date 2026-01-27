@@ -318,13 +318,13 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 | Document | Type | Parent Hub | Related Documents |
 |----------|------|------------|-------------------|
 | `DATA_MANAGEMENT.md` | Hub | FOUNDATIONAL_CONCEPTS | DATABASE_SELECTION, ACID_AND_BASE |
-| `SHARDING_PARTITIONING.md` | Deep-Dive | DATA_MANAGEMENT | CONSISTENT_HASHING, REPLICATION_PATTERNS |
-| `STORAGE_ENGINES.md` | Deep-Dive | DATA_MANAGEMENT | READ_WRITE_OPTIMIZATION |
+| `DD_SHARDING_PARTITIONING.md` | Deep-Dive | DATA_MANAGEMENT | CONSISTENT_HASHING, REPLICATION_PATTERNS |
+| `DD_STORAGE_ENGINES.md` | Deep-Dive | DATA_MANAGEMENT | READ_WRITE_OPTIMIZATION |
 | `INDEXING_STRATEGIES.md` | Deep-Dive | DATA_MANAGEMENT | DATABASE_SELECTION |
-| `CONSISTENT_HASHING_DEEP_DIVE.md` | Deep-Dive | DISTRIBUTED_SYSTEM_PATTERNS | SHARDING_PARTITIONING, DYNAMO_ARCHITECTURE |
-| `DYNAMO_ARCHITECTURE.md` | Case Study | DISTRIBUTED_SYSTEM_PATTERNS | CONSISTENT_HASHING, REPLICATION_PATTERNS, CLOCK_SYNC |
-| `CONSENSUS_PROTOCOLS.md` | Deep-Dive | CONSISTENCY_AND_CONSENSUS | REPLICATION_PATTERNS |
-| `CLOCK_SYNCHRONIZATION.md` | Deep-Dive | CONSISTENCY_AND_CONSENSUS | CONSENSUS_PROTOCOLS, DYNAMO_ARCHITECTURE |
+| `DD_CONSISTENT_HASHING.md` | Deep-Dive | DISTRIBUTED_SYSTEM_PATTERNS | SHARDING_PARTITIONING, DYNAMO_ARCHITECTURE |
+| `DD_DYNAMO_ARCHITECTURE.md` | Case Study | DISTRIBUTED_SYSTEM_PATTERNS | CONSISTENT_HASHING, REPLICATION_PATTERNS, CLOCK_SYNC |
+| `DD_CONSENSUS_PROTOCOLS.md` | Deep-Dive | CONSISTENCY_AND_CONSENSUS | REPLICATION_PATTERNS |
+| `DD_CLOCK_SYNCHRONIZATION.md` | Deep-Dive | CONSISTENCY_AND_CONSENSUS | CONSENSUS_PROTOCOLS, DYNAMO_ARCHITECTURE |
 
 ---
 
@@ -339,7 +339,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 | Step | Action | Input | Output | Validation |
 |------|--------|-------|--------|------------|
 | 1a | Restructure DATA_MANAGEMENT.md as hub | Current 16K doc | ~8-10K hub doc | Follows Hub Template |
-| 1b | Create SHARDING_PARTITIONING.md | Extracted content + new | ~15K deep-dive | Follows ADR Template |
+| 1b | Create DD_SHARDING_PARTITIONING.md | Extracted content + new | ~15K deep-dive | Follows ADR Template |
 
 **Dependencies:** None (starting point)
 
@@ -353,7 +353,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 
 | Step | Action | Output | Validation |
 |------|--------|--------|------------|
-| 2a | Create CONSISTENT_HASHING_DEEP_DIVE.md | ~12-15K | ADR Template + math proofs |
+| 2a | Create DD_CONSISTENT_HASHING.md | ~12-15K | ADR Template + math proofs |
 
 **Content Requirements:**
 
@@ -381,7 +381,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
    - DynamoDB: Partition management
    - Memcached: Client-side consistent hashing
 
-**Dependencies:** SHARDING_PARTITIONING.md (will reference)
+**Dependencies:** DD_SHARDING_PARTITIONING.md (will reference)
 
 ---
 
@@ -391,7 +391,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 
 | Step | Action | Output | Validation |
 |------|--------|--------|------------|
-| 3a | Create STORAGE_ENGINES.md | ~15K | ADR Template |
+| 3a | Create DD_STORAGE_ENGINES.md | ~15K | ADR Template |
 
 **Content Requirements:**
 
@@ -429,7 +429,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 
 | Step | Action | Output | Validation |
 |------|--------|--------|------------|
-| 4a | Create DYNAMO_ARCHITECTURE.md | ~18-20K | Case study format |
+| 4a | Create DD_DYNAMO_ARCHITECTURE.md | ~18-20K | Case study format |
 
 **Content Requirements:**
 
@@ -438,7 +438,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
    - SLA-driven design philosophy
 
 2. **Partitioning**
-   - Consistent hashing (link to CONSISTENT_HASHING_DEEP_DIVE.md)
+   - Consistent hashing (link to DD_CONSISTENT_HASHING.md)
    - Virtual nodes and heterogeneous hardware
 
 3. **Replication**
@@ -460,7 +460,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
    - Gossip-based protocol
    - Protocol convergence
 
-**Dependencies:** CONSISTENT_HASHING_DEEP_DIVE.md, REPLICATION_PATTERNS.md
+**Dependencies:** DD_CONSISTENT_HASHING.md, REPLICATION_PATTERNS.md
 
 ---
 
@@ -470,7 +470,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 
 | Step | Action | Output | Validation |
 |------|--------|--------|------------|
-| 5a | Create CONSENSUS_PROTOCOLS.md | ~18-20K | ADR Template |
+| 5a | Create DD_CONSENSUS_PROTOCOLS.md | ~18-20K | ADR Template |
 
 **Content Requirements:**
 
@@ -511,7 +511,7 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 
 | Phase | Document | Dependencies |
 |-------|----------|--------------|
-| 6 | CLOCK_SYNCHRONIZATION.md | CONSENSUS_PROTOCOLS, DYNAMO_ARCHITECTURE |
+| 6 | DD_CLOCK_SYNCHRONIZATION.md | CONSENSUS_PROTOCOLS, DYNAMO_ARCHITECTURE |
 | 7 | CRDT_PATTERNS.md | CLOCK_SYNCHRONIZATION |
 | 8 | ANTI_ENTROPY.md | DYNAMO_ARCHITECTURE |
 | 9 | GOSSIP_PROTOCOLS.md | DISTRIBUTED_SYSTEM_PATTERNS |
@@ -526,11 +526,11 @@ The handbook follows a hub-and-spoke architecture where hub documents provide na
 | Document | Specification Location | Status |
 |----------|------------------------|--------|
 | DATA_MANAGEMENT.md (Hub) | [OUTLINE_DATA_MANAGEMENT.md](./OUTLINE_DATA_MANAGEMENT.md) § Outline A | ✅ Implemented |
-| SHARDING_PARTITIONING.md | [OUTLINE_DATA_MANAGEMENT.md](./OUTLINE_DATA_MANAGEMENT.md) § Outline B | ✅ Implemented |
-| CONSISTENT_HASHING_DEEP_DIVE.md | This document § Phase 2 | 📋 Requirements defined |
-| STORAGE_ENGINES.md | This document § Phase 3 | 📋 Requirements defined |
-| DYNAMO_ARCHITECTURE.md | This document § Phase 4 | 📋 Requirements defined |
-| CONSENSUS_PROTOCOLS.md | This document § Phase 5 | 📋 Requirements defined |
+| DD_SHARDING_PARTITIONING.md | [OUTLINE_DATA_MANAGEMENT.md](./OUTLINE_DATA_MANAGEMENT.md) § Outline B | ✅ Implemented |
+| DD_CONSISTENT_HASHING.md | This document § Phase 2 | 📋 Requirements defined |
+| DD_STORAGE_ENGINES.md | This document § Phase 3 | 📋 Requirements defined |
+| DD_DYNAMO_ARCHITECTURE.md | This document § Phase 4 | 📋 Requirements defined |
+| DD_CONSENSUS_PROTOCOLS.md | This document § Phase 5 | 📋 Requirements defined |
 
 ### Line-by-Line Change Specification for DATA_MANAGEMENT.md
 
@@ -553,7 +553,7 @@ See [OUTLINE_DATA_MANAGEMENT_SPLIT.md](./OUTLINE_DATA_MANAGEMENT_SPLIT.md) for:
 | Create restructuring outline | ✅ Complete | OUTLINE_DATA_MANAGEMENT_SPLIT.md |
 | Approve outline | ✅ Complete | Approved by stakeholder |
 | Implement DATA_MANAGEMENT.md hub | ✅ Complete | ~8.5K, 10 sections, hub document created |
-| Implement SHARDING_PARTITIONING.md | ✅ Complete | ~25K, 10 sections, 4 strategies with complexity analysis |
+| Implement DD_SHARDING_PARTITIONING.md | ✅ Complete | ~25K, 10 sections, 4 strategies with complexity analysis |
 | Validate against checklist | ✅ Complete | All criteria met |
 
 ### Phase 2: Consistent Hashing
@@ -569,10 +569,10 @@ See [OUTLINE_DATA_MANAGEMENT_SPLIT.md](./OUTLINE_DATA_MANAGEMENT_SPLIT.md) for:
 
 | Document | Outline | Implementation | Validation |
 |----------|---------|----------------|------------|
-| STORAGE_ENGINES.md | ✅ | ✅ | ✅ |
-| DYNAMO_ARCHITECTURE.md | ✅ | ✅ | ✅ |
-| CONSENSUS_PROTOCOLS.md | ✅ | ✅ | ✅ |
-| CLOCK_SYNCHRONIZATION.md | ✅ | ✅ | ✅ |
+| DD_STORAGE_ENGINES.md | ✅ | ✅ | ✅ |
+| DD_DYNAMO_ARCHITECTURE.md | ✅ | ✅ | ✅ |
+| DD_CONSENSUS_PROTOCOLS.md | ✅ | ✅ | ✅ |
+| DD_CLOCK_SYNCHRONIZATION.md | ✅ | ✅ | ✅ |
 
 ### P1 Enhancements: Existing Document Improvements
 

@@ -3,7 +3,7 @@
 > How databases physically store, retrieve, and maintain data on disk.
 
 **Prerequisites:** [Data Management Overview](./DATA_MANAGEMENT.md), [Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md)
-**Related:** [Sharding & Partitioning](./SHARDING_PARTITIONING.md), [Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md)
+**Related:** [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md), [Workload Optimization](./08_WORKLOAD_OPTIMIZATION.md)
 **Estimated study time:** 3-4 hours
 
 ---
@@ -1175,6 +1175,6 @@ flowchart TD
 ## Navigation
 
 **Parent:** [Data Management Overview](./DATA_MANAGEMENT.md)
-**Related:** [Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md), [Sharding & Partitioning](./SHARDING_PARTITIONING.md)
-**Previous:** [Consistent Hashing](./CONSISTENT_HASHING_DEEP_DIVE.md)
+**Related:** [Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md), [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
+**Previous:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md)
 **Index:** [README](./README.md)

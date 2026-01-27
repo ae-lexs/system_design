@@ -3,7 +3,7 @@
 > Comprehensive guide to distributing data across multiple nodes for scale and performance.
 
 **Prerequisites:** [Data Management Overview](./DATA_MANAGEMENT.md), [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md)
-**Related:** [Consistent Hashing](./CONSISTENT_HASHING_DEEP_DIVE.md), [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
+**Related:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md), [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
 **Estimated study time:** 3-4 hours
 
 ---
@@ -516,7 +516,7 @@ ring.add_node("tiny-server", vnodes=75)     # 0.5x capacity
 - High availability requirements
 - Willing to accept range query overhead
 
-> **Deep-Dive Link:** [Consistent Hashing Deep Dive](./CONSISTENT_HASHING_DEEP_DIVE.md) covers mathematical proofs, jump hashing, and bounded load extensions.
+> **Deep-Dive Link:** [Consistent Hashing Deep Dive](./DD_CONSISTENT_HASHING.md) covers mathematical proofs, jump hashing, and bounded load extensions.
 
 ---
 
@@ -1023,6 +1023,6 @@ flowchart TD
 ## Navigation
 
 **Parent:** [Data Management Overview](./DATA_MANAGEMENT.md)
-**Related:** [Consistent Hashing](./CONSISTENT_HASHING_DEEP_DIVE.md), [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
+**Related:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md), [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
 **Previous:** [Data Management Overview](./DATA_MANAGEMENT.md)
 **Index:** [README](./README.md)

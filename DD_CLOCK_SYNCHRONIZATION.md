@@ -2,8 +2,8 @@
 
 > How distributed systems reason about time, order events, and coordinate across machines.
 
-**Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consensus Protocols](./CONSENSUS_PROTOCOLS.md)
-**Related:** [Dynamo Architecture](./DYNAMO_ARCHITECTURE.md), [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
+**Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md)
+**Related:** [Dynamo Architecture](./DD_DYNAMO_ARCHITECTURE.md), [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
 **Estimated study time:** 2-3 hours
 
 ---
@@ -1060,6 +1060,6 @@ flowchart TD
 ## Navigation
 
 **Parent:** [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Related:** [Consensus Protocols](./CONSENSUS_PROTOCOLS.md), [Dynamo Architecture](./DYNAMO_ARCHITECTURE.md)
-**Previous:** [Consensus Protocols](./CONSENSUS_PROTOCOLS.md)
+**Related:** [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md), [Dynamo Architecture](./DD_DYNAMO_ARCHITECTURE.md)
+**Previous:** [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md)
 **Index:** [README](./README.md)

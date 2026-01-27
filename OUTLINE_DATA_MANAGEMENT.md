@@ -1,6 +1,6 @@
 # Implementation Specification: DATA_MANAGEMENT.md Restructuring
 
-> Precise implementation guide for splitting DATA_MANAGEMENT.md into a hub document and creating SHARDING_PARTITIONING.md deep-dive.
+> Precise implementation guide for splitting DATA_MANAGEMENT.md into a hub document and creating DD_SHARDING_PARTITIONING.md deep-dive.
 
 **Parent Document:** [IMPROVEMENT_PLAN.md](./IMPROVEMENT_PLAN.md)  
 **Phase:** 1 (Data Management Restructuring)  
@@ -13,7 +13,7 @@
 1. [Executive Summary](#executive-summary)
 2. [Current State Analysis](#current-state-analysis)
 3. [Specification A: DATA_MANAGEMENT.md Hub](#specification-a-data_managementmd-hub)
-4. [Specification B: SHARDING_PARTITIONING.md Deep-Dive](#specification-b-sharding_partitioningmd-deep-dive)
+4. [Specification B: DD_SHARDING_PARTITIONING.md Deep-Dive](#specification-b-sharding_partitioningmd-deep-dive)
 5. [Implementation Checklist](#implementation-checklist)
 6. [Validation Criteria](#validation-criteria)
 
@@ -26,7 +26,7 @@
 | Action | From | To |
 |--------|------|-----|
 | Restructure | DATA_MANAGEMENT.md (16K, 611 lines) | DATA_MANAGEMENT.md Hub (~8-10K) |
-| Create | — | SHARDING_PARTITIONING.md (~15K) |
+| Create | — | DD_SHARDING_PARTITIONING.md (~15K) |
 
 ### Why
 
@@ -86,7 +86,7 @@
 
 **Prerequisites:** [Foundational Concepts](./FOUNDATIONAL_CONCEPTS.md)  
 **Deep-Dives:**  
-- [Sharding & Partitioning](./SHARDING_PARTITIONING.md)  
+- [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)  
 - [Storage Engines](./STORAGE_ENGINES.md) *(planned)*  
 - [Indexing Strategies](./INDEXING_STRATEGIES.md) *(planned)*  
 - [Replication Patterns](./REPLICATION_PATTERNS.md)  
@@ -153,7 +153,7 @@ KEEP:
 - Partition key selection summary (3 criteria)
 - Key trade-off statement
 
-REMOVE (move to SHARDING_PARTITIONING.md):
+REMOVE (move to DD_SHARDING_PARTITIONING.md):
 - All detailed strategy explanations
 - All Mermaid diagrams
 - Vertical partitioning details
@@ -163,7 +163,7 @@ REMOVE (move to SHARDING_PARTITIONING.md):
 Target: ~600 words (down from ~1700)
 
 ADD:
-- Clear callout linking to SHARDING_PARTITIONING.md
+- Clear callout linking to DD_SHARDING_PARTITIONING.md
 
 #### Section 6: Replication Overview
 
@@ -209,7 +209,7 @@ ADD:
 
 ---
 
-## Specification B: SHARDING_PARTITIONING.md Deep-Dive
+## Specification B: DD_SHARDING_PARTITIONING.md Deep-Dive
 
 ### Target Metrics
 
@@ -355,7 +355,7 @@ Content:
 - [ ] All deep-dive links present
 - [ ] Size validated: 8-10K
 
-### Phase 1b: SHARDING_PARTITIONING.md
+### Phase 1b: DD_SHARDING_PARTITIONING.md
 
 - [ ] Create with all 10 sections
 - [ ] 4 strategy sections each have: mechanism, algorithm, complexity, trade-offs, examples
@@ -385,7 +385,7 @@ Content:
 | Quick reference | Section 9 |
 | No sharding details | Moved to deep-dive |
 
-### SHARDING_PARTITIONING.md
+### DD_SHARDING_PARTITIONING.md
 
 | Criterion | Requirement |
 |-----------|-------------|

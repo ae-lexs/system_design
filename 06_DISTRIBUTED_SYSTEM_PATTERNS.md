@@ -1512,7 +1512,7 @@ class OrderQueryHandler:
 
 Replication ensures data durability and availability by maintaining copies across multiple nodes.
 
-> **Deep Dive:** For comprehensive coverage of Dynamo-style replication (sloppy quorums, hinted handoff, Merkle trees), see [DYNAMO_ARCHITECTURE.md](./DYNAMO_ARCHITECTURE.md).
+> **Deep Dive:** For comprehensive coverage of Dynamo-style replication (sloppy quorums, hinted handoff, Merkle trees), see [DD_DYNAMO_ARCHITECTURE.md](./DD_DYNAMO_ARCHITECTURE.md).
 
 #### Primary-Backup Replication
 

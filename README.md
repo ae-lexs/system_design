@@ -99,8 +99,8 @@ graph TB
     subgraph Layer3["Layer 3: Data Patterns"]
         D1[03_DATA_STORAGE_AND_ACCESS<br/>Storage Engines, NewSQL]
         D2[DATA_MANAGEMENT Hub]
-        D3[SHARDING_PARTITIONING]
-        D4[STORAGE_ENGINES]
+        D3[DD_SHARDING_PARTITIONING]
+        D4[DD_STORAGE_ENGINES]
         D5[04_CACHING_AND_CONTENT_DELIVERY<br/>Cache Sizing, CDN]
     end
 
@@ -110,10 +110,10 @@ graph TB
 
     subgraph Layer5["Layer 5: Distributed Systems"]
         I1[06_DISTRIBUTED_SYSTEM_PATTERNS<br/>Coordination, Resilience]
-        I2[CONSISTENT_HASHING_DEEP_DIVE]
-        I3[DYNAMO_ARCHITECTURE]
-        I4[CONSENSUS_PROTOCOLS]
-        I5[CLOCK_SYNCHRONIZATION]
+        I2[DD_CONSISTENT_HASHING]
+        I3[DD_DYNAMO_ARCHITECTURE]
+        I4[DD_CONSENSUS_PROTOCOLS]
+        I5[DD_CLOCK_SYNCHRONIZATION]
     end
 
     subgraph Layer6["Layer 6: Infrastructure"]
@@ -168,8 +168,8 @@ graph TB
 |----------|-----------|---------------|------------------|
 | [DATABASE_SELECTION](./03_DATA_STORAGE_AND_ACCESS.md) | SQL vs. NoSQL decision framework | Structure vs. Flexibility | "Do I know my data schema upfront?" |
 | [DATA_MANAGEMENT](./DATA_MANAGEMENT.md) | Storage model, indexing, partitioning overview | Storage vs. Query speed | "What are my fundamental data decisions?" |
-| [STORAGE_ENGINES](./STORAGE_ENGINES.md) | B-Tree vs LSM-Tree, WAL, compaction | Read vs. Write optimization | "How should data be physically stored?" |
-| [SHARDING_PARTITIONING](./SHARDING_PARTITIONING.md) | Horizontal partitioning strategies, rebalancing | Scale vs. Complexity | "How do I distribute data across nodes?" |
+| [DD_STORAGE_ENGINES](./DD_STORAGE_ENGINES.md) | B-Tree vs LSM-Tree, WAL, compaction | Read vs. Write optimization | "How should data be physically stored?" |
+| [DD_SHARDING_PARTITIONING](./DD_SHARDING_PARTITIONING.md) | Horizontal partitioning strategies, rebalancing | Scale vs. Complexity | "How do I distribute data across nodes?" |
 | [REPLICATION_PATTERNS](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Leader-follower, multi-leader, leaderless | Consistency vs. Availability | "How should data flow between nodes?" |
 | [CACHING_STRATEGIES](./04_CACHING_AND_CONTENT_DELIVERY.md) | Cache-aside, write-through, write-behind | Freshness vs. Speed | "How stale can my cached data be?" |
 | [CACHING_AND_CDN](./04_CACHING_AND_CONTENT_DELIVERY.md) | CDN architecture, edge caching | Latency vs. Consistency | "Where should I cache content?" |
@@ -194,10 +194,10 @@ graph TB
 | [LOAD_BALANCING_AND_SCALING](./07_SCALING_AND_INFRASTRUCTURE.md) | LB algorithms, horizontal/vertical scaling | Complexity vs. Capacity | "How do I distribute load?" |
 | [TRAFFIC_MANAGEMENT](./07_SCALING_AND_INFRASTRUCTURE.md) | Rate limiting, circuit breakers, backpressure | Fairness vs. Throughput | "How do I protect my system from overload?" |
 | [DISTRIBUTED_SYSTEM_PATTERNS](./06_DISTRIBUTED_SYSTEM_PATTERNS.md) | Leader election, quorums, coordination | Various | "What patterns solve distributed coordination?" |
-| [CONSISTENT_HASHING](./CONSISTENT_HASHING_DEEP_DIVE.md) | Ring hashing, jump hash, virtual nodes | Scale vs. Disruption | "How do I minimize data movement when scaling?" |
-| [DYNAMO_ARCHITECTURE](./DYNAMO_ARCHITECTURE.md) | Vector clocks, sloppy quorums, gossip | Availability vs. Consistency | "How do AP systems achieve high availability?" |
-| [CONSENSUS_PROTOCOLS](./CONSENSUS_PROTOCOLS.md) | Paxos, Raft, Zab, leader election | Consistency vs. Availability | "How do CP systems agree on values?" |
-| [CLOCK_SYNCHRONIZATION](./CLOCK_SYNCHRONIZATION.md) | NTP, Lamport clocks, HLC, TrueTime | Accuracy vs. Complexity | "How do distributed systems reason about time?" |
+| [CONSISTENT_HASHING](./DD_CONSISTENT_HASHING.md) | Ring hashing, jump hash, virtual nodes | Scale vs. Disruption | "How do I minimize data movement when scaling?" |
+| [DD_DYNAMO_ARCHITECTURE](./DD_DYNAMO_ARCHITECTURE.md) | Vector clocks, sloppy quorums, gossip | Availability vs. Consistency | "How do AP systems achieve high availability?" |
+| [DD_CONSENSUS_PROTOCOLS](./DD_CONSENSUS_PROTOCOLS.md) | Paxos, Raft, Zab, leader election | Consistency vs. Availability | "How do CP systems agree on values?" |
+| [DD_CLOCK_SYNCHRONIZATION](./DD_CLOCK_SYNCHRONIZATION.md) | NTP, Lamport clocks, HLC, TrueTime | Accuracy vs. Complexity | "How do distributed systems reason about time?" |
 | [BATCH_AND_STREAM_PROCESSING](./08_WORKLOAD_OPTIMIZATION.md) | MapReduce, Kafka, Flink, Lambda architecture | Latency vs. Efficiency | "Do I need real-time or can I batch?" |
 | ARCHITECTURE_DIAGRAMS | Reference architectures, system blueprints | — | "What do complete systems look like?" |
 
@@ -519,7 +519,7 @@ For targeted study, this table shows which documents build on others:
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-01 | Initial handbook creation with 12 core documents |
-| 2.0 | 2025-01 | Major enhancement: 7 new deep-dive documents (STORAGE_ENGINES, SHARDING_PARTITIONING, CONSISTENT_HASHING_DEEP_DIVE, DYNAMO_ARCHITECTURE, CONSENSUS_PROTOCOLS, CLOCK_SYNCHRONIZATION, DATA_MANAGEMENT hub) |
+| 2.0 | 2025-01 | Major enhancement: 7 new deep-dive documents (DD_STORAGE_ENGINES, DD_SHARDING_PARTITIONING, DD_CONSISTENT_HASHING, DD_DYNAMO_ARCHITECTURE, DD_CONSENSUS_PROTOCOLS, DD_CLOCK_SYNCHRONIZATION, DATA_MANAGEMENT hub) |
 | 2.1 | 2025-01 | P1 enhancements: Amdahl's Law, USL, linearizability, session guarantees, chain replication |
 | 2.2 | 2025-01 | P2 enhancements: Queuing theory, NewSQL, HTTP/3/QUIC, Lambda/Kappa architecture, cache sizing |
 

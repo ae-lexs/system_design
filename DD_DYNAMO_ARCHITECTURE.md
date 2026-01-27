@@ -2,8 +2,8 @@
 
 > Comprehensive analysis of Amazon's highly available key-value store and its influence on modern distributed databases.
 
-**Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consistent Hashing](./CONSISTENT_HASHING_DEEP_DIVE.md), [Data Management](./DATA_MANAGEMENT.md)
-**Related:** [Sharding & Partitioning](./SHARDING_PARTITIONING.md), [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
+**Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consistent Hashing](./DD_CONSISTENT_HASHING.md), [Data Management](./DATA_MANAGEMENT.md)
+**Related:** [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md), [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
 **Estimated study time:** 3-4 hours
 
 ---
@@ -1103,6 +1103,6 @@ class DynamoNode:
 ## Navigation
 
 **Parent:** [Distributed System Patterns](./06_DISTRIBUTED_SYSTEM_PATTERNS.md)
-**Related:** [Consistent Hashing](./CONSISTENT_HASHING_DEEP_DIVE.md), [Sharding & Partitioning](./SHARDING_PARTITIONING.md)
-**Previous:** [Storage Engines](./STORAGE_ENGINES.md)
+**Related:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md), [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
+**Previous:** [Storage Engines](./DD_STORAGE_ENGINES.md)
 **Index:** [README](./README.md)
