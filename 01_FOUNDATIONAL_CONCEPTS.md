@@ -97,6 +97,8 @@ Scalability is the capability of a system to handle a growing amount of work by 
 
 #### Amdahl's Law — The Parallelization Limit
 
+> **Reference:** Amdahl, G. M. (1967). "Validity of the single processor approach to achieving large scale computing capabilities." AFIPS Conference Proceedings.
+
 **Principle:** The maximum speedup from parallelization is limited by the serial (non-parallelizable) portion of the workload.
 
 ```
@@ -131,6 +133,8 @@ graph LR
 **Interview Insight:** "No matter how many servers we add, if 10% of our workload is serial (like acquiring distributed locks), we can never exceed 10× the single-node throughput."
 
 #### Universal Scalability Law (USL) — The Real-World Limit
+
+> **Reference:** Gunther, N. J. (2007). "Guerrilla Capacity Planning." Springer. See also: [http://www.perfdynamics.com/Manifesto/USLscalability.html](http://www.perfdynamics.com/Manifesto/USLscalability.html)
 
 **Principle:** Extends Amdahl's Law to account for coordination overhead between nodes.
 
@@ -567,6 +571,9 @@ graph TD
 ### The Latency-Throughput Trade-off
 
 **System Invariant (Little's Law):**
+
+> **Reference:** Little, J. D. C. (1961). "A Proof for the Queuing Formula: L = λW." Operations Research.
+
 ```
 L = λ × W
 
@@ -819,6 +826,8 @@ async def hedged_request(replicas, timeout_ms=10):
 
 ## 6. CAP Theorem
 
+> **Reference:** Brewer, E. (2000). "Towards Robust Distributed Systems." PODC Keynote. Formally proved by Gilbert & Lynch (2002). "Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services." ACM SIGACT News.
+
 ### The Theorem
 
 In a distributed data system, when a **network partition** occurs, you must choose between:
@@ -931,6 +940,8 @@ flowchart TD
 ---
 
 ## 7. PACELC Theorem
+
+> **Reference:** Abadi, D. (2012). "Consistency Tradeoffs in Modern Distributed Database System Design." IEEE Computer.
 
 ### Beyond CAP
 
@@ -1337,3 +1348,6 @@ Before your interview, ensure you can:
 |------|---------|---------|
 | 2025-01 | 1.0 | Initial creation |
 | 2025-01 | 2.0 | Comprehensive expansion with enhanced diagrams, interview patterns, and estimation deep-dive |
+| 2025-01 | 2.1 | P1: Added Amdahl's Law, Universal Scalability Law, enhanced MTBF/MTTR formulas |
+| 2025-01 | 2.2 | P2: Added queuing theory (M/M/1), tail latency deep dive, hedged requests pattern |
+| 2025-01 | 2.3 | Added paper references for key theorems (Amdahl, Gunther, Brewer, Abadi, Little) |
