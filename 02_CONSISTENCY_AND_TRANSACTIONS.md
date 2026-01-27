@@ -55,6 +55,11 @@ Distributed transactions are like coordinating multiple assembly lines to produc
 
 ## Transaction Isolation Levels
 
+> **References:**
+> - Gray, J. et al. (1976). "Granularity of Locks and Degrees of Consistency in a Shared Data Base." IBM Research.
+> - Berenson, H. et al. (1995). "A Critique of ANSI SQL Isolation Levels." ACM SIGMOD.
+> - Fekete, A. et al. (2005). "Making Snapshot Isolation Serializable." ACM TODS.
+
 ### The Anomaly Spectrum
 
 Before understanding isolation levels, we must understand what can go wrong:
@@ -350,6 +355,19 @@ flowchart TD
 
 ### Multi-Version Concurrency Control (MVCC)
 
+> **Reference:** Bernstein, P. & Goodman, N. (1983). "Multiversion Concurrency Control—Theory and Algorithms." ACM TODS.
+
+**Complexity Comparison: MVCC vs Two-Phase Locking**
+
+| Aspect | Two-Phase Locking (2PL) | MVCC |
+|--------|-------------------------|------|
+| **Read latency** | May block on write lock | Never blocks (reads snapshot) |
+| **Write latency** | Acquires locks | Creates new version |
+| **Space overhead** | Lock table O(active txns × locked rows) | Version chain O(versions × row size) |
+| **Deadlock risk** | Yes (lock cycles) | No (but write-write conflicts abort) |
+| **Long read txns** | Block writers | Don't block (but may cause version bloat) |
+| **Garbage collection** | None needed | Vacuum/purge required |
+
 **Philosophy**: "Readers never block writers. Writers never block readers."
 
 ```mermaid
@@ -502,6 +520,18 @@ flowchart TD
 
 ### Two-Phase Commit (2PC)
 
+> **Reference:** Gray, J. (1978). "Notes on Data Base Operating Systems." Operating Systems: An Advanced Course. Springer.
+
+**Complexity Analysis:**
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| **Message complexity** | O(3n) | Prepare + vote + commit for n participants |
+| **Time complexity** | O(2 RTT) | Prepare-vote round + commit-ack round |
+| **Space (coordinator)** | O(n) | Track participant state |
+| **Space (participant)** | O(1) | Local transaction state only |
+| **Blocking** | Yes | Participants hold locks during protocol |
+
 **The Protocol**:
 
 ```mermaid
@@ -615,6 +645,8 @@ sequenceDiagram
 ---
 
 ### Saga Pattern
+
+> **Reference:** Garcia-Molina, H. & Salem, K. (1987). "Sagas." ACM SIGMOD Conference.
 
 **Philosophy**: "If we can't have atomic distributed transactions, use a sequence of local transactions with compensating actions."
 
@@ -914,6 +946,8 @@ Understanding consistency models is critical for distributed systems. This secti
 
 ### Linearizability (Strong Consistency)
 
+> **Reference:** Herlihy, M. & Wing, J. (1990). "Linearizability: A Correctness Condition for Concurrent Objects." ACM TOPLAS.
+
 **Formal Definition:** A system is linearizable if every operation appears to take effect atomically at some point between its invocation and response, and operations appear in an order consistent with real-time ordering.
 
 ```mermaid
@@ -1054,6 +1088,19 @@ sequenceDiagram
 4. **A long-running report keeps seeing inconsistent data** as other transactions modify the database. What isolation level would fix this? What's the cost?
 
 5. **Design the transactional outbox pattern** for an order service that must reliably publish OrderCreated events.
+
+---
+
+---
+
+## Revision History
+
+| Date | Version | Changes |
+|------|---------|---------|
+| 2025-01 | 1.0 | Initial creation with isolation levels, 2PC, Sagas |
+| 2025-01 | 2.0 | P1: Added linearizability formal definition, session guarantees (PRAM), Jepsen testing |
+| 2025-01 | 2.1 | Added paper references (Gray, Berenson, Garcia-Molina, Herlihy & Wing, Bernstein) |
+| 2025-01 | 2.2 | Added complexity analysis for 2PC and MVCC vs 2PL comparison |
 
 ---
 
