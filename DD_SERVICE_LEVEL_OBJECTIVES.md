@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md)
 **Related:** [Resilience Patterns](./08_RESILIENCE_PATTERNS.md), [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
-**Estimated study time:** 1.5-2 hours
 
 ---
 

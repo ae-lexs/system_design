@@ -3,8 +3,7 @@
 > Mathematical foundations, algorithm variants, and production implementations for minimal-disruption data distribution.
 
 **Prerequisites:** [Data Management Overview](./DATA_MANAGEMENT.md), [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
-**Related:** [Dynamo Architecture](./DD_DYNAMO_ARCHITECTURE.md), [Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md)
-**Estimated study time:** 2-3 hours
+**Related:** [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md), [Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md)
 
 ---
 
@@ -48,10 +47,10 @@ flowchart LR
     end
 
     subgraph "After: 5 Nodes"
-        K1A["hash(key1) % 5 = 3 → Node 3 ❌"]
-        K2A["hash(key2) % 5 = 1 → Node 1 ✓"]
-        K3A["hash(key3) % 5 = 0 → Node 0 ❌"]
-        K4A["hash(key4) % 5 = 4 → Node 4 ❌"]
+        K1A["hash(key1) % 5 = 3 → Node 3 MOVED"]
+        K2A["hash(key2) % 5 = 1 → Node 1 OK"]
+        K3A["hash(key3) % 5 = 0 → Node 0 MOVED"]
+        K4A["hash(key4) % 5 = 4 → Node 4 MOVED"]
     end
 
     K1 -.->|"~75% keys<br/>must move!"| K1A
@@ -786,7 +785,7 @@ flowchart LR
         PN3["Node C<br/>owns 20%"]
     end
 
-    NOTE["High variance!<br/>Node A has 2.25x Node C's load"]
+    PN1 -.-> NOTE["High variance!<br/>Node A has 2.25x Node C's load"]
 ```
 
 ### Virtual Nodes Solution
@@ -1034,8 +1033,8 @@ flowchart TD
     Q2 -->|Yes| JUMP[Jump Hash<br/>O(1) space]
     Q2 -->|No| RING1[Ring-based<br/>Accept O(N) space]
 
-    Q3 -->|"Small (< 50)"| Q4{Need K replicas<br/>naturally?}
-    Q3 -->|"Large (50+)"| RING2[Ring-based<br/>With virtual nodes]
+    Q3 -->|Small| Q4{Need K replicas<br/>naturally?}
+    Q3 -->|Large| RING2[Ring-based<br/>With virtual nodes]
 
     Q4 -->|Yes| HRW[Rendezvous/HRW<br/>O(N) lookup OK]
     Q4 -->|No| RING3[Ring-based<br/>Standard choice]
@@ -1134,6 +1133,6 @@ flowchart TD
 ## Navigation
 
 **Parent:** [Data Management Overview](./DATA_MANAGEMENT.md)
-**Related:** [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md), [Dynamo Architecture](./DD_DYNAMO_ARCHITECTURE.md)
+**Related:** [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md), [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md)
 **Previous:** [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
 **Index:** [README](./README.md)

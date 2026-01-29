@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [03 — Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
 **Builds toward:** [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md), [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md)
-**Estimated study time:** 4-5 hours
 
 ---
 
@@ -399,26 +398,23 @@ With Index:     SELECT * FROM users WHERE email = 'x'  → O(log n) lookup
 ```mermaid
 flowchart TB
     INDEX[Index Types]
-    
+
     INDEX --> BTREE_IDX[B-Tree Index<br/>General purpose]
     INDEX --> HASH_IDX[Hash Index<br/>Equality only]
     INDEX --> BITMAP_IDX[Bitmap Index<br/>Low cardinality]
     INDEX --> GIN_IDX[GIN/Inverted<br/>Full-text, arrays]
     INDEX --> GIST_IDX[GiST/Spatial<br/>Geometric data]
     INDEX --> BRIN_IDX[BRIN<br/>Large sorted tables]
-    
+
     BTREE_IDX --> BTREE_USE["Range queries, sorting,<br/>equality, prefix matching"]
     HASH_IDX --> HASH_USE["Exact match only,<br/>O(1) average"]
     BITMAP_IDX --> BITMAP_USE["Enum columns,<br/>boolean flags"]
     GIN_IDX --> GIN_USE["Text search,<br/>JSON containment"]
-```
-
-> **Deep Dive:** See [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) for inverted indexes, BM25 scoring, and Elasticsearch architecture.
-
-```mermaid
     GIST_IDX --> GIST_USE["PostGIS, range types,<br/>nearest neighbor"]
     BRIN_IDX --> BRIN_USE["Time-series, append-only<br/>very large tables"]
 ```
+
+> **Deep Dive:** See [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) for inverted indexes, BM25 scoring, and Elasticsearch architecture.
 
 ### B-Tree Index Deep Dive
 
@@ -1287,6 +1283,7 @@ Add:
 
 | Deep Dive | Topics Covered |
 |-----------|----------------|
+| [DATA_MANAGEMENT](./DATA_MANAGEMENT.md) | Hub: Storage decisions framework |
 | [DD_STORAGE_ENGINES](./DD_STORAGE_ENGINES.md) | B-Tree, LSM-Tree, WAL, compaction |
 | [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) | Inverted indexes, TF-IDF, BM25, Elasticsearch |
 

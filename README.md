@@ -43,13 +43,13 @@ graph TB
         DD1[DD_STORAGE_ENGINES]
         DD2[DD_SHARDING_PARTITIONING]
         DD3[DD_CONSISTENT_HASHING]
-        DD4[DD_DYNAMO_ARCHITECTURE]
+        DD4[DD_DYNAMODB_MODELING]
         DD5[DD_CONSENSUS_PROTOCOLS]
         DD6[DD_CLOCK_SYNCHRONIZATION]
         DD7[DD_SERVICE_LEVEL_OBJECTIVES]
         DD8[DD_OBSERVABILITY]
         DD9[DD_KAFKA_ARCHITECTURE]
-        DD10[DD_REDIS_INTERNALS]
+        DD10[DD_REDIS_ARCHITECTURE]
         DD11[DD_SEARCH_ENGINES]
     end
 
@@ -105,13 +105,13 @@ graph TB
 | [DD_STORAGE_ENGINES](./DD_STORAGE_ENGINES.md) | B-Tree vs LSM, WAL, Compaction | Need to discuss storage internals |
 | [DD_SHARDING_PARTITIONING](./DD_SHARDING_PARTITIONING.md) | Range, Hash, Consistent, Directory | Designing for horizontal scale |
 | [DD_CONSISTENT_HASHING](./DD_CONSISTENT_HASHING.md) | Ring, Jump, Maglev, Bounded Load | Load balancers, distributed caches |
-| [DD_DYNAMO_ARCHITECTURE](./DD_DYNAMO_ARCHITECTURE.md) | Vector Clocks, Sloppy Quorum, Gossip | AP systems, eventual consistency |
+| [DD_DYNAMODB_MODELING](./DD_DYNAMODB_MODELING.md) | Partition Keys, Sort Keys, GSIs, Access Patterns | DynamoDB data modeling |
 | [DD_CONSENSUS_PROTOCOLS](./DD_CONSENSUS_PROTOCOLS.md) | Paxos, Raft, Zab | CP systems, leader election |
 | [DD_CLOCK_SYNCHRONIZATION](./DD_CLOCK_SYNCHRONIZATION.md) | Lamport, Vector, HLC, TrueTime | Ordering, causality, timestamps |
 | [DD_SERVICE_LEVEL_OBJECTIVES](./DD_SERVICE_LEVEL_OBJECTIVES.md) | SLOs, SLIs, SLAs, Error Budgets | Availability targets, production readiness |
 | [DD_OBSERVABILITY](./DD_OBSERVABILITY.md) | Four Golden Signals, Monitoring, Tracing | System health, debugging at scale |
 | [DD_KAFKA_ARCHITECTURE](./DD_KAFKA_ARCHITECTURE.md) | Partitions, Consumer Groups, Exactly-Once | Event streaming, async messaging |
-| [DD_REDIS_INTERNALS](./DD_REDIS_INTERNALS.md) | Data Structures, Clustering, Persistence | Caching, session storage, rate limiting |
+| [DD_REDIS_ARCHITECTURE](./DD_REDIS_ARCHITECTURE.md) | Data Structures, Clustering, Persistence | Caching, session storage, rate limiting |
 | [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) | Inverted Index, BM25, Elasticsearch | Full-text search, log analytics |
 
 ---
@@ -143,7 +143,7 @@ graph TB
 | SLOs and availability | 01 (availability) | DD_SERVICE_LEVEL_OBJECTIVES |
 | Monitoring at scale | 01 (observability) | DD_OBSERVABILITY |
 | Message queues / Kafka | 02 (async) | DD_KAFKA_ARCHITECTURE |
-| Caching / Redis | 05 (caching) | DD_REDIS_INTERNALS |
+| Caching / Redis | 05 (caching) | DD_REDIS_ARCHITECTURE |
 | Search / Elasticsearch | 04 (storage) | DD_SEARCH_ENGINES |
 
 ---
@@ -152,7 +152,7 @@ graph TB
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 3.2 | 2025-01 | High-frequency deep-dives: DD_KAFKA_ARCHITECTURE, DD_REDIS_INTERNALS, DD_SEARCH_ENGINES (~174K content) |
+| 3.2 | 2025-01 | High-frequency deep-dives: DD_KAFKA_ARCHITECTURE, DD_REDIS_ARCHITECTURE, DD_SEARCH_ENGINES (~174K content) |
 | 3.1 | 2025-01 | SRE enhancement: Added DD_SERVICE_LEVEL_OBJECTIVES, DD_OBSERVABILITY; SRE references throughout |
 | 3.0 | 2025-01 | Major restructure: 10 core documents, content reorganized for progressive learning |
 | 2.2 | 2025-01 | Deep dives renamed with DD_ prefix; README streamlined |

@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Resilience Patterns](./08_RESILIENCE_PATTERNS.md)
 **Related:** [Service Level Objectives](./DD_SERVICE_LEVEL_OBJECTIVES.md), [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
-**Estimated study time:** 2 hours
 
 ---
 
@@ -515,7 +514,7 @@ flowchart TD
     Q1 -->|"Yes"| Q2{Can someone<br/>take action?}
 
     Q2 -->|"No"| METRIC
-    Q2 -->|"Yes"| Q3{Is it urgent?<br/>(needs immediate fix)}
+    Q2 -->|"Yes"| Q3{Is it urgent?<br/>Needs immediate fix}
 
     Q3 -->|"No"| Q4{Does it need<br/>same-day response?}
     Q3 -->|"Yes"| PAGE["Page on-call<br/>(P1/P2)"]

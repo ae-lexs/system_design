@@ -3,8 +3,7 @@
 > How distributed systems reason about time, order events, and coordinate across machines.
 
 **Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md)
-**Related:** [Dynamo Architecture](./DD_DYNAMO_ARCHITECTURE.md), [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Estimated study time:** 2-3 hours
+**Related:** [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md), [Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
 
 ---
 
@@ -719,8 +718,8 @@ flowchart TD
     Q2 -->|No| LAMPORT[Lamport Clock]
     Q2 -->|Yes| PHYSICAL[Physical + NTP]
 
-    Q3 -->|"Small (< 100)"| VECTOR[Vector Clock]
-    Q3 -->|"Large"| Q4{Need wall-clock time?}
+    Q3 -->|Small| VECTOR[Vector Clock]
+    Q3 -->|Large| Q4{Need wall-clock time?}
 
     Q4 -->|No| LAMPORT
     Q4 -->|Yes| HLC[Hybrid Logical Clock]
@@ -1060,6 +1059,6 @@ flowchart TD
 ## Navigation
 
 **Parent:** [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
-**Related:** [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md), [Dynamo Architecture](./DD_DYNAMO_ARCHITECTURE.md)
+**Related:** [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md), [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md)
 **Previous:** [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md)
 **Index:** [README](./README.md)

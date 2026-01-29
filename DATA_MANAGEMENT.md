@@ -10,8 +10,6 @@
 - [Indexing Strategies](./03_DATA_STORAGE_AND_ACCESS.md#2-indexing-deep-dive)
 - [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
 
-**Estimated study time:** 1.5 hours (overview) + deep-dives
-
 ---
 
 ## 1. The Data Management Decision Tree

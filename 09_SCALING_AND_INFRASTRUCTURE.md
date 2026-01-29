@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md), [08 — Resilience Patterns](./08_RESILIENCE_PATTERNS.md)
 **Builds toward:** [10 — Quick Reference](./10_QUICK_REFERENCE.md)
-**Estimated study time:** 3-4 hours
 
 ---
 

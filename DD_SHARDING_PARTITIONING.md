@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Data Management Overview](./DATA_MANAGEMENT.md), [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md)
 **Related:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md), [Replication Patterns](./REPLICATION_PATTERNS.md) *(planned)*
-**Estimated study time:** 3-4 hours
 
 ---
 

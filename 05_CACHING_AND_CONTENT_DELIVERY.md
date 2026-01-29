@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [04 — Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md)
 **Builds toward:** [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md), [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
-**Estimated study time:** 3-4 hours
 
 ---
 
@@ -599,7 +598,7 @@ def get_user(user_id: str) -> User:
 - **Redis:** Need data structures, persistence, pub/sub, atomic operations
 - **Memcached:** Pure caching, maximum simplicity, multi-threaded performance
 
-> **Deep Dive:** See [DD_REDIS_INTERNALS](./DD_REDIS_INTERNALS.md) for data structures, clustering, persistence mechanisms, and distributed locking.
+> **Deep Dive:** See [DD_REDIS_ARCHITECTURE](./DD_REDIS_ARCHITECTURE.md) for data structures, clustering, persistence mechanisms, and distributed locking.
 
 ### Cache Cluster Architectures
 
@@ -1673,7 +1672,7 @@ Add:
 
 | Deep Dive | Topics Covered |
 |-----------|----------------|
-| [DD_REDIS_INTERNALS](./DD_REDIS_INTERNALS.md) | Data structures with complexity, Sentinel, Cluster, persistence, Redlock |
+| [DD_REDIS_ARCHITECTURE](./DD_REDIS_ARCHITECTURE.md) | Data structures with complexity, Sentinel, Cluster, persistence, Redlock |
 
 ---
 
