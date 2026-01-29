@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
 **Related:** [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md), [Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md)
-**Estimated study time:** 4-5 hours
 
 ---
 

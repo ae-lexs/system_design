@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Data Management Overview](./DATA_MANAGEMENT.md), [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
 **Related:** [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md), [Distributed Coordination](./07_DISTRIBUTED_COORDINATION.md)
-**Estimated study time:** 2-3 hours
 
 ---
 

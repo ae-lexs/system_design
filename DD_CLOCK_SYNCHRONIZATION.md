@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md)
 **Related:** [DynamoDB Modeling](./DD_DYNAMODB_MODELING.md), [Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
-**Estimated study time:** 2-3 hours
 
 ---
 

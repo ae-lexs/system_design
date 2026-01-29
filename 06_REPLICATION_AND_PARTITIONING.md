@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [02 — Communication Patterns](./02_COMMUNICATION_PATTERNS.md), [03 — Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md), [04 — Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md), [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md)
 **Deep Dives:** [DD_SHARDING_PARTITIONING](./DD_SHARDING_PARTITIONING.md), [DD_DYNAMODB_MODELING](./DD_DYNAMODB_MODELING.md)
-**Estimated study time:** 3-4 hours
 
 ---
 

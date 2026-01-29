@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md), [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
 **Related:** [Storage Engines](./DD_STORAGE_ENGINES.md) (for segment merging), [Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md)
-**Estimated study time:** 2.5-3 hours
 
 ---
 

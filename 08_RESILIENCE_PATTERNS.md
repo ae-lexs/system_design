@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [02 — Consistency & Transactions](./02_CONSISTENCY_AND_TRANSACTIONS.md)
 **Builds toward:** [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md), [10 — Quick Reference](./10_QUICK_REFERENCE.md)
-**Estimated study time:** 2-3 hours
 
 ---
 

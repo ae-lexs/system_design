@@ -3,9 +3,7 @@
 > The vocabulary, mental models, and invariants that underpin every distributed system design decision.
 
 **Prerequisites:** None  
-**Builds toward:** All other modules  
-**Estimated study time:** 3–4 hours  
-**Review frequency:** Weekly during active preparation
+**Builds toward:** All other modules
 
 ---
 

@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [04 — Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md)
 **Builds toward:** [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md), [09 — Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
-**Estimated study time:** 3-4 hours
 
 ---
 

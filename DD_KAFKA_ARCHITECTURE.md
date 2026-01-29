@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Communication Patterns](./02_COMMUNICATION_PATTERNS.md), [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md)
 **Related:** [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md) (for replication), [Storage Engines](./DD_STORAGE_ENGINES.md) (for log structure)
-**Estimated study time:** 2.5-3 hours
 
 ---
 

@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [Resilience Patterns](./08_RESILIENCE_PATTERNS.md)
 **Related:** [Service Level Objectives](./DD_SERVICE_LEVEL_OBJECTIVES.md), [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
-**Estimated study time:** 2 hours
 
 ---
 

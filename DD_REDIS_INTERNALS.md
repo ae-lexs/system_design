@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md), [Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md)
 **Related:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md) (for clustering), [Consensus Protocols](./DD_CONSENSUS_PROTOCOLS.md) (for Sentinel)
-**Estimated study time:** 2.5-3 hours
 
 ---
 

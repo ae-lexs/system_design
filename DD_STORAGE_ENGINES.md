@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Data Management Overview](./DATA_MANAGEMENT.md), [Data Storage & Access](./03_DATA_STORAGE_AND_ACCESS.md)
 **Related:** [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md), [Scaling & Infrastructure](./09_SCALING_AND_INFRASTRUCTURE.md)
-**Estimated study time:** 3-4 hours
 
 ---
 

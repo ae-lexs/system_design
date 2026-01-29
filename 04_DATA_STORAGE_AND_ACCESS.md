@@ -4,7 +4,6 @@
 
 **Prerequisites:** [01 — Foundational Concepts](./01_FOUNDATIONAL_CONCEPTS.md), [03 — Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
 **Builds toward:** [05 — Caching & Content Delivery](./05_CACHING_AND_CONTENT_DELIVERY.md), [06 — Replication & Partitioning](./06_REPLICATION_AND_PARTITIONING.md)
-**Estimated study time:** 4-5 hours
 
 ---
 

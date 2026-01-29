@@ -4,7 +4,6 @@
 
 **Prerequisites:** [Data Storage & Access](./04_DATA_STORAGE_AND_ACCESS.md), [Sharding & Partitioning](./DD_SHARDING_PARTITIONING.md)
 **Related:** [Consistent Hashing](./DD_CONSISTENT_HASHING.md), [Consistency & Transactions](./03_CONSISTENCY_AND_TRANSACTIONS.md)
-**Estimated study time:** 3-4 hours
 
 ---
 
