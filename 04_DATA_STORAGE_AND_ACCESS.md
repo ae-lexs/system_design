@@ -1283,6 +1283,7 @@ Add:
 
 | Deep Dive | Topics Covered |
 |-----------|----------------|
+| [DATA_MANAGEMENT](./DATA_MANAGEMENT.md) | Hub: Storage decisions framework |
 | [DD_STORAGE_ENGINES](./DD_STORAGE_ENGINES.md) | B-Tree, LSM-Tree, WAL, compaction |
 | [DD_SEARCH_ENGINES](./DD_SEARCH_ENGINES.md) | Inverted indexes, TF-IDF, BM25, Elasticsearch |
 
