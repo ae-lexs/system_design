@@ -45,27 +45,27 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    subgraph "Kafka Cluster"
-        subgraph "Broker 1"
-            B1P0["Topic A - P0 (Leader)"]
-            B1P1["Topic A - P1 (Follower)"]
+    subgraph CLUSTER["Kafka Cluster"]
+        subgraph BROKER1["Broker 1"]
+            B1P0["Topic A - P0 Leader"]
+            B1P1["Topic A - P1 Follower"]
         end
 
-        subgraph "Broker 2"
-            B2P0["Topic A - P0 (Follower)"]
-            B2P1["Topic A - P1 (Leader)"]
+        subgraph BROKER2["Broker 2"]
+            B2P0["Topic A - P0 Follower"]
+            B2P1["Topic A - P1 Leader"]
         end
 
-        subgraph "Broker 3"
-            B3P0["Topic A - P0 (Follower)"]
-            B3P1["Topic A - P1 (Follower)"]
+        subgraph BROKER3["Broker 3"]
+            B3P0["Topic A - P0 Follower"]
+            B3P1["Topic A - P1 Follower"]
         end
     end
 
-    CONTROLLER["Controller<br/>(KRaft or ZooKeeper)"]
-    CONTROLLER -.-> Broker 1
-    CONTROLLER -.-> Broker 2
-    CONTROLLER -.-> Broker 3
+    CONTROLLER["Controller<br/>KRaft or ZooKeeper"]
+    CONTROLLER -.-> BROKER1
+    CONTROLLER -.-> BROKER2
+    CONTROLLER -.-> BROKER3
 ```
 
 | Concept | Description |
